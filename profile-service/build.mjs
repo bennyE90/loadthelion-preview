@@ -25,6 +25,7 @@ if(!streetFont)throw Error('Home street font not found');
 await writeFile('site/assets/load-street.ttf',Buffer.from(streetFont[1],'base64'));
 
 home=home.replaceAll('assets/03c8549b61bca52abb.png','assets/loadthelion-official-logo.webp');
+home=home.replaceAll('BACK TO THE PENTHOUSE','BACK TO HOME').replaceAll('LOADTHELION // THE PENTHOUSE','LOADTHELION // HOME');
 const brandCss=await readFile('profile-service/public/brand-home.css','utf8');
 home=home.replace(/<style id="brand-home-refresh">[\s\S]*?<\/style>/g,'').replace('</head>',`<style id="brand-home-refresh">${brandCss}</style></head>`);
 home=home.replace(/<a class="nav-profile-link"[^>]*>CONNECT WALLET<\/a>/g,'').replace(/<button class="nav-profile-link"[^>]*>CONNECT WALLET<\/button>/g,'');
