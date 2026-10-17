@@ -18,3 +18,20 @@ only as a first-load backup. It displays snapshot block/time and delayed updates
 The scheduled indexer runs approximately every fifteen minutes; GitHub scheduling
 and RPC availability can delay it. This is a test, not a real-time oracle or a
 prize payout service. Full rankings and proof remain in the private archive.
+
+Private project mode: Netlify protection rejects external requests before
+Functions execute, including the prepared OIDC publisher. The workflow variable
+`ROAR_SITE_PUBLISH_ENABLED` stays unset. Instead the site supports server-side
+reading through the existing private login, enabled by a Functions-scoped secret
+environment variable `ROAR_ARCHIVE_READ_TOKEN`. The GitHub fine-grained token
+must grant Contents: read-only to `bennyE90/loadthelion-indexer` only; it needs no
+write, Actions or account permissions. Create/store it through the providers'
+secure settings, never chat, code or browser cookies.
+
+The reader pins latest/index/full ranking to one archive commit, verifies both
+content hashes and matching rankings, returns only the public Top 100 and reuses
+the same conditional publication guard. Refreshes are coalesced and cached for
+five minutes; stored fresh snapshots are reused for ten minutes. Source outages,
+expired permissions or invalid data retain the last verified result. Without
+this connection the page explicitly displays its saved backup. OIDC does not
+bypass team login; do not change visibility or copy browser cookies to CI.

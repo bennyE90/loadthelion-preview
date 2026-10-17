@@ -14,7 +14,7 @@ export function createRoarFeed({fetcher=fetch,now=()=>Date.now()}={}){
   get current(){return current;},
   async read(signal){
    try{
-    const response=await fetcher('/api/roar/snapshot',{credentials:'omit',cache:'no-cache',signal,headers:etag?{'If-None-Match':etag}:{}});
+    const response=await fetcher('/api/roar/snapshot',{credentials:'same-origin',cache:'no-cache',signal,headers:etag?{'If-None-Match':etag}:{}});
     if(response.status===304){if(!current)throw Error('Missing cached snapshot');return {snapshot:current,state:'unchanged'};}
     if(!response.ok)throw Error('Snapshot service unavailable');
     const snapshot=accept(await response.json());etag=response.headers.get('etag');return {snapshot,state:'live'};

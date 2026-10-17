@@ -53,25 +53,10 @@ async function readBody(request){
  return JSON.parse(Buffer.concat(chunks).toString('utf8'));
 }
 const json=(data,status=200,headers={})=>Response.json(data,{status,headers:{'Cache-Control':'no-store','X-Content-Type-Options':'nosniff',...headers}});
-export function createRoarRelay({store,loadKeys,now=()=>Date.now()}){
+export function createRoarRelay({store,loadKeys,archiveReader,now=()=>Date.now()}){
  const read=key=>store.getWithMetadata(key,{type:'json',consistency:'strong'});
- return async request=>{
-  const path=new URL(request.url).pathname;
-  if(path==='/api/roar/snapshot'&&['GET','HEAD'].includes(request.method)){
-   try{
-    const row=await read('latest');if(!row)return json({status:'awaiting-data'},503,{'Retry-After':'60'});
-    const etag='"'+row.data.publication.contentHash+'"',headers={'ETag':etag,'Cache-Control':'public,max-age=15','Netlify-CDN-Cache-Control':'public,s-maxage=30,stale-while-revalidate=30','X-Content-Type-Options':'nosniff'};
-    if(request.headers.get('if-none-match')===etag)return new Response(null,{status:304,headers});
-    return new Response(request.method==='HEAD'?null:JSON.stringify(row.data),{status:200,headers:{...headers,'Content-Type':'application/json'}});
-   }catch{return json({status:'unavailable'},503,{'Retry-After':'60'});}
-  }
-  if(path!=='/api/roar/publish')return json({error:'Not found'},404);
-  if(request.method!=='POST')return json({error:'Method not allowed'},405,{Allow:'POST'});
-  let publisher;
-  try{const auth=request.headers.get('authorization')||'';if(!auth.startsWith('Bearer '))throw Error('No publisher');publisher=await verifyPublisher(auth.slice(7),{loadKeys,now});}catch{return json({error:'Publisher authentication rejected'},401);}
-  let body;
-  try{body=await readBody(request);validatePublishedSnapshot(body.snapshot,body.archive,now());}catch{return json({error:'Snapshot validation rejected'},422);}
-  const data=body.snapshot,contentHash=snapshotHash(data);
+ async function save(data,archive,publisher){
+  const contentHash=snapshotHash(data);
   try{
    for(let tries=0;tries<4;tries++){
     const old=await read('latest');
@@ -86,11 +71,33 @@ export function createRoarRelay({store,loadKeys,now=()=>Date.now()}){
     }
     const immutable=await store.setJSON('snapshots/'+contentHash,data,{onlyIfNew:true});
     if(!immutable.modified){const saved=await read('snapshots/'+contentHash);if(!saved||snapshotHash(saved.data)!==contentHash)throw Error('Stored snapshot mismatch');}
-    const publication={contentHash,archiveCommit:body.archive.commit,snapshotHash:body.archive.snapshotHash,runId:publisher.run_id,runAttempt:publisher.run_attempt,publishedAt:Math.floor(now()/1000)};
+    const publication={contentHash,archiveCommit:archive.commit,snapshotHash:archive.snapshotHash,runId:publisher.run_id,runAttempt:publisher.run_attempt,publishedAt:Math.floor(now()/1000)};
     const result=await store.setJSON('latest',{...data,publication},old?{onlyIfMatch:old.etag}:{onlyIfNew:true});
     if(result.modified)return json({status:'published',snapshotBlock:data.snapshotBlock,contentHash});
    }
    return json({error:'Concurrent publication; retry'},409);
   }catch{return json({error:'Publication unavailable; previous snapshot retained'},503);}
+ }
+ return async request=>{
+  const path=new URL(request.url).pathname;
+  if(path==='/api/roar/snapshot'&&['GET','HEAD'].includes(request.method)){
+   try{
+    let row=await read('latest');
+    if(archiveReader&&(!row||now()/1000-row.data.publication.publishedAt>=600)){
+     try{const payload=await archiveReader();validatePublishedSnapshot(payload.snapshot,payload.archive,now());await save(payload.snapshot,payload.archive,{run_id:'archive-read',run_attempt:'1'});row=await read('latest')}catch{/* Keep the previous valid snapshot on archive or permission failures. */}
+    }
+    if(!row)return json({status:'awaiting-data'},503,{'Retry-After':'60'});
+    const etag='"'+row.data.publication.contentHash+'"',headers={'ETag':etag,'Cache-Control':'public,max-age=15','Netlify-CDN-Cache-Control':'public,s-maxage=30,stale-while-revalidate=30','X-Content-Type-Options':'nosniff'};
+    if(request.headers.get('if-none-match')===etag)return new Response(null,{status:304,headers});
+    return new Response(request.method==='HEAD'?null:JSON.stringify(row.data),{status:200,headers:{...headers,'Content-Type':'application/json'}});
+   }catch{return json({status:'unavailable'},503,{'Retry-After':'60'});}
+  }
+  if(path!=='/api/roar/publish')return json({error:'Not found'},404);
+  if(request.method!=='POST')return json({error:'Method not allowed'},405,{Allow:'POST'});
+  let publisher;
+  try{const auth=request.headers.get('authorization')||'';if(!auth.startsWith('Bearer '))throw Error('No publisher');publisher=await verifyPublisher(auth.slice(7),{loadKeys,now});}catch{return json({error:'Publisher authentication rejected'},401);}
+  let body;
+  try{body=await readBody(request);validatePublishedSnapshot(body.snapshot,body.archive,now());}catch{return json({error:'Snapshot validation rejected'},422);}
+  return save(body.snapshot,body.archive,publisher);
  };
 }

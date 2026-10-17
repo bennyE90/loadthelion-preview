@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {generateKeyPairSync,sign} from 'node:crypto';
-import {createRoarRelay,verifyPublisher,validatePublishedSnapshot,strictBlobFetch,TOKEN,PUBLISH_URL} from './roar-relay.mjs';
+import {createRoarRelay,verifyPublisher,validatePublishedSnapshot,strictBlobFetch,snapshotHash,TOKEN,PUBLISH_URL} from './roar-relay.mjs';
+import {createArchiveReader} from './roar-archive-reader.mjs';
 import {createRoarFeed} from '../site/roar-feed.mjs';
 const now=Date.parse('2026-10-17T14:00:00Z'),seconds=now/1000,start=1791763200;
 const {privateKey,publicKey}=generateKeyPairSync('rsa',{modulusLength:2048});
@@ -57,7 +58,7 @@ test('oversize publications are rejected without storage mutation',async()=>{con
 test('feed uses API ETag and retains its snapshot after failure, rollback or conflict',async()=>{
  let response=Response.json(fixture(),{headers:{etag:'"first"'}}),seen;
  const feed=createRoarFeed({now:()=>now,fetcher:async(url,options)=>{seen={url,options};return response.clone()}});
- assert.equal((await feed.read()).state,'live');assert.equal(seen.url,'/api/roar/snapshot');
+ assert.equal((await feed.read()).state,'live');assert.equal(seen.url,'/api/roar/snapshot');assert.equal(seen.options.credentials,'same-origin');
  response=new Response(null,{status:304});assert.equal((await feed.read()).state,'unchanged');assert.equal(seen.options.headers['If-None-Match'],'"first"');
  for(const bad of [{...fixture(),snapshotBlock:100475439},{...fixture(),ranking:[{...fixture().ranking[0],balanceRaw:'999'}]},{...fixture(),complete:false}]){response=Response.json(bad);assert.equal((await feed.read()).state,'retained');assert.equal(feed.current.ranking[0].balanceRaw,fixture().ranking[0].balanceRaw)}
  response=new Response(null,{status:503});assert.equal((await feed.read()).state,'retained');
@@ -66,4 +67,34 @@ test('feed uses the saved snapshot on first-load API failure, then recovers',asy
  let live=false;const feed=createRoarFeed({now:()=>now,fetcher:async url=>url.startsWith('/')&&!live?new Response(null,{status:503}):Response.json(fixture())});
  assert.equal((await feed.read()).state,'saved');live=true;assert.equal((await feed.read()).state,'live');
  const unavailable=createRoarFeed({fetcher:async()=>{throw Error('offline')}});assert.deepEqual(await unavailable.read(),{snapshot:null,state:'unavailable'});
+});
+function archived(){const snapshot=fixture(),eventId=archive.eventId,full={...snapshot,schema:2,eventId,kind:'current',allRanking:snapshot.ranking,excludedAddresses:[],boundary:null},hash=snapshotHash(full),index={environment:'ULTON_TEST',prizesEnabled:false,events:[{id:eventId,snapshots:[{kind:'current',at:snapshot.snapshotTimestamp,block:snapshot.snapshotBlock,hash}]}]};return {snapshot,full,hash,index}}
+test('server reader pins all reads to the same private commit and coalesces concurrent refreshes',async()=>{
+ const data=archived(),calls=[];let time=now;
+ const reader=createArchiveReader({token:'read-only-test',now:()=>time,fetcher:async(url,options)=>{
+  calls.push({url,options});const path=new URL(url).pathname;
+  if(path.includes('/git/ref/'))return Response.json({object:{sha:archive.commit}});
+  assert.equal(new URL(url).searchParams.get('ref'),archive.commit);
+  return Response.json(path.endsWith('/latest.json')?data.snapshot:path.endsWith('/index.json')?data.index:data.full);
+ }});
+ const [a,b]=await Promise.all([reader(),reader()]);assert.deepEqual(a,b);assert.equal(a.archive.snapshotHash,data.hash);assert.equal(calls.length,4);assert(calls.every(c=>c.options.headers.Authorization==='Bearer read-only-test'&&!c.url.includes('read-only-test')));
+ await reader();assert.equal(calls.length,4);time+=300001;await reader();assert.equal(calls.length,8);
+});
+test('server reader rejects altered full rankings and public/archive mismatches',async()=>{
+ for(const mode of ['full','public','ref','denied']){
+  const data=archived();const reader=createArchiveReader({token:'read-only-test',fetcher:async url=>{
+   if(mode==='denied')return new Response(null,{status:403});const path=new URL(url).pathname;
+   if(path.includes('/git/ref/'))return Response.json({object:{sha:mode==='ref'?'invalid':archive.commit}});
+   if(path.endsWith('/latest.json'))return Response.json(mode==='public'?{...data.snapshot,eligibleWallets:999}:data.snapshot);
+   if(path.endsWith('/index.json'))return Response.json(data.index);
+   return Response.json(mode==='full'?{...data.full,allRanking:[]}:data.full);
+  }});await assert.rejects(reader());
+ }
+});
+test('read-through publication works behind private site login and retains its last valid snapshot on archive errors',async()=>{
+ const store=memoryStore(),data=archived();let fail=false,calls=0;
+ const handler=createRoarRelay({store,...opts,archiveReader:async()=>{calls++;if(fail)throw Error('GitHub unavailable');return {snapshot:data.snapshot,archive}}});
+ const url=PUBLISH_URL.replace('publish','snapshot');const r=await handler(new Request(url));assert.equal(r.status,200);assert.equal((await r.json()).publication.runId,'archive-read');assert.equal(calls,1);
+ fail=true;const later=createRoarRelay({store,now:()=>now+601000,archiveReader:async()=>{throw Error('GitHub unavailable')}});const retained=await later(new Request(url));assert.equal(retained.status,200);assert.equal((await retained.json()).snapshotBlock,data.snapshot.snapshotBlock);
+ const empty=createRoarRelay({store:memoryStore(),...opts,archiveReader:async()=>{throw Error('permission denied')}});assert.equal((await empty(new Request(url))).status,503);
 });
