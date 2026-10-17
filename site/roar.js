@@ -1,7 +1,9 @@
 import {BOOST_SECONDS,eventStart,movements,formatAmount,formatBoost} from './roar-data.mjs?v=20261017-boost1';
 import {createRoarFeed} from './roar-feed.mjs?v=20261017-live1';
 import {snapshotStatus} from './roar-status.mjs?v=20261017-close1';
+import {validatePrice,usdValue} from './roar-usd.mjs?v=20261017-usd1';
 const feed=createRoarFeed();
+let marketQuote=null,priceBusy=false,priceFailed=false,valuationKey='';
 const root=document.getElementById('roar-rows'),more=document.getElementById('roar-show-more'),count=document.getElementById('roar-count'),status=document.getElementById('roar-data-status');
 let odds=null;
 async function loadOdds(){
@@ -27,11 +29,12 @@ function render(snapshot,baseline){
   const change=changes.get(x.address);const move=cell('roar-movement '+(change?.type||'unknown'),change?.text||'—');move.setAttribute('aria-label',change?.label||'No verified 00:00 UTC baseline');rank.append(move);
   const wallet=cell('roar-name',x.address?'Holder '+String(x.rank).padStart(3,'0'):'Awaiting launch');const hint=cell('roar-address',x.address?x.address.slice(0,6)+'…'+x.address.slice(-4):'Reserved position');if(x.address)wallet.title=x.address;wallet.append(hint);
   const amount=cell('roar-amount',snapshot?formatAmount(x.balanceRaw,snapshot.decimals):'—');
+  const usd=cell('roar-usd','— USD');usd.dataset.balanceRaw=x.balanceRaw||'';amount.append(usd);
   const boost=cell('roar-boost','');const pct=cell('roar-boost-pct',snapshot?formatBoost(x.boostPercent):'—');const track=document.createElement('div');track.className='roar-boost-track';track.setAttribute('role','progressbar');track.setAttribute('aria-label',snapshot?'ROAR BOOST':'ROAR BOOST waiting for verified data');track.setAttribute('aria-valuemin','0');track.setAttribute('aria-valuemax','200');if(snapshot){track.setAttribute('aria-valuenow',x.boostPercent.toFixed(1));track.setAttribute('aria-valuetext',formatBoost(x.boostPercent))}const fill=document.createElement('i');fill.style.width=(snapshot?x.boostPercent/2:0)+'%';track.append(fill);boost.append(pct,track);
   const points=cell('roar-points',snapshot?formatAmount(x.pointsNumerator,snapshot.decimals,BigInt(BOOST_SECONDS)):'—');const chance=cell('roar-chance',odds?chanceFormat.format(odds[x.rank-1])+'%':'—');chance.title=odds?'Confirmed weighting for rank '+x.rank+' in the full 100-wallet draw; display rounded, original precision preserved':'Chance table unavailable · no probability estimated';
   row.append(rank,wallet,amount,boost,points,chance);root.append(row);
  }
- show();
+ show();valuationKey='';updateMarket();
 }
 function show(){const total=root.children.length;[...root.children].forEach((row,i)=>{row.hidden=i>=visible});count.textContent='Showing '+Math.min(visible,total)+' of '+total+(current?' verified ULTON test positions':' reserved positions · No live ranking');less.hidden=visible<=10;more.hidden=visible>=total;more.textContent='SHOW MORE · NEXT '+Math.min(10,Math.max(0,total-visible))}
 less.addEventListener('click',()=>{visible=10;show();const first=root.querySelector('.rank-row');first?.scrollIntoView({block:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});more.focus({preventScroll:true})});
@@ -55,6 +58,7 @@ function updateStatus(){
  return result;
 }
 function updateCountdown(){
+ updateMarket();
  const now=Math.floor(Date.now()/1000),start=current?current.eventStart:eventStart(now),end=start+7*86400;
  let remaining=Math.max(0,end-now);
  for(const [id,seconds] of [['roar-days',86400],['roar-hours',3600],['roar-minutes',60],['roar-seconds',1]]){const el=document.getElementById(id);if(el)el.textContent=String(Math.floor(remaining/seconds)).padStart(2,'0');remaining%=seconds}
@@ -80,3 +84,24 @@ async function hydrateProfiles(){
  }catch{/* Wallet addresses remain visible when profile service is unavailable. */}
 }
 if(profileRoot){hydrateProfiles();new MutationObserver(hydrateProfiles).observe(profileRoot,{childList:true})}
+
+function updateMarket(){
+ const price=document.getElementById('roar-token-price'),info=document.getElementById('roar-price-status');
+ let valid=null;try{valid=validatePrice(marketQuote)}catch{/* Expired prices are hidden, never converted to zero. */}
+ if(price)price.textContent=valid?'$'+valid.priceUsd:'—';
+ if(info)info.textContent=valid?((priceFailed||valid.status==='stale'?'Last available quote':'DEX Screener quote')+' · checked '+new Date(valid.observedAt*1000).toISOString().slice(11,19)+' UTC · '+Math.max(0,Math.floor(Date.now()/1000)-valid.observedAt)+'s ago'):'Price unavailable · USD estimates paused';
+ const key=String(current?.snapshotBlock)+':'+(valid?.priceUsd||'unavailable');
+ if(key!==valuationKey){for(const el of root.querySelectorAll('.roar-usd'))el.textContent=valid&&current?('≈ '+usdValue(el.dataset.balanceRaw,current.decimals,valid.priceUsd)):'— USD';valuationKey=key}
+}
+async function refreshMarket(){
+ if(priceBusy)return;priceBusy=true;
+ try{
+  const response=await fetch('/api/roar/price',{credentials:'same-origin',cache:'no-cache',signal:AbortSignal.timeout(8000)});
+  if(!response.ok)throw Error('Quote unavailable');
+  const next=validatePrice(await response.json());
+  if(marketQuote&&next.observedAt<marketQuote.observedAt)throw Error('Older quote');
+  marketQuote=next;priceFailed=false;
+ }catch{priceFailed=true}finally{priceBusy=false;updateMarket()}
+}
+refreshMarket();setInterval(()=>{if(!document.hidden)refreshMarket()},60000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshMarket()});

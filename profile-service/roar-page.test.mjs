@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
 import {buildSync} from 'esbuild';
+import {usdValue} from '../site/roar-usd.mjs';
 const script=buildSync({stdin:{contents:readFileSync(new URL('./public/roar.js',import.meta.url),'utf8').replace(/(\.mjs)\?v=[^']+/g,'$1'),resolveDir:new URL('../site/',import.meta.url).pathname,loader:'js'},bundle:true,format:'iife',write:false}).outputFiles[0].text;
 const snapshot=JSON.parse(readFileSync(new URL('./public/roar-snapshot.json',import.meta.url)));
 class Element{
@@ -11,13 +12,14 @@ class Element{
  replaceChildren(...elements){this.children=elements}
  setAttribute(){}
  addEventListener(name,fn){this.listeners[name]=fn}
- querySelectorAll(){return []}
+ querySelectorAll(selector){return this.children.flatMap(el=>[...(selector==='.roar-usd'&&el.className==='roar-usd'?[el]:[]),...el.querySelectorAll(selector)])}
 }
-async function page({oddsFailure=false,offline=false}={}){
+async function page({oddsFailure=false,offline=false,priceFailure=false}={}){
  const nodes=new Map(),intervals=[],errors=[];let now=(snapshot.eventStart+604800)*1000-1000;
  const document={hidden:false,getElementById(id){if(!nodes.has(id))nodes.set(id,new Element());return nodes.get(id)},createElement(){return new Element()},addEventListener(){}};
  class Clock extends Date{constructor(...args){super(...(args.length?args:[now]))}static now(){return now}}
  const fetcher=async url=>{
+  if(url==='/api/roar/price')return priceFailure?new Response(null,{status:503}):Response.json({status:'ok',chainId:25,token:snapshot.token,pair:'0xa3dc34f3c56157e35bd0e20d8800449dacdda2a5',currency:'USD',source:'DEX Screener',priceUsd:'0.00012345',observedAt:Math.floor(now/1000)});
   if(url.startsWith('probabilities'))return oddsFailure?new Response(null,{status:503}):Response.json(JSON.parse(readFileSync(new URL('../site/probabilities.json',import.meta.url))));
   if(url==='/api/roar/snapshot'){if(offline)throw Error('offline');return Response.json(snapshot)}
   if(url==='roar-snapshot.json')return Response.json(snapshot);
@@ -48,4 +50,22 @@ test('first-load API outage displays the saved backup explicitly',async()=>{
  const p=await page({offline:true});
  assert.match(p.nodes.get('roar-data-status').textContent,/Saved backup/);
  assert.equal(p.nodes.get('roar-rows').children.length,100);
+});
+
+test('price and holder USD estimates load independently and expire without altering the ranking',async()=>{
+ const p=await page(),row=p.nodes.get('roar-rows').children[0];
+ assert.equal(p.nodes.get('roar-token-price').textContent,'$0.00012345');
+ assert.equal(row.children[2].children[0].textContent,'≈ '+usdValue(snapshot.ranking[0].balanceRaw,snapshot.decimals,'0.00012345'));
+ const points=row.children[4].textContent;
+ p.advance(601000);
+ assert.equal(p.nodes.get('roar-token-price').textContent,'—');
+ assert.equal(row.children[2].children[0].textContent,'— USD');
+ assert.equal(row.children[4].textContent,points);
+});
+test('price outage leaves token quantities, scores and pagination available',async()=>{
+ const p=await page({priceFailure:true});
+ assert.equal(p.nodes.get('roar-token-price').textContent,'—');
+ assert.match(p.nodes.get('roar-price-status').textContent,/Price unavailable/);
+ assert.equal(p.nodes.get('roar-rows').children.length,100);
+ assert.notEqual(p.nodes.get('roar-rows').children[0].children[4].textContent,'—');
 });
