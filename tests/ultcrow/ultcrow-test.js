@@ -3,14 +3,23 @@
 const btn=document.getElementById('ultcrow-refresh'),status=document.getElementById('ultcrow-status'),root=document.getElementById('roar-rows');
 const remote='https://raw.githubusercontent.com/bennyE90/loadthelion-indexer/test-ultcrow/tests/ultcrow-top100-snapshot.json';
 const local='ultcrow-snapshot.json';
-let current=null,source='';
+let current=null,source='',visibleCount=10;
+const more=document.getElementById('roar-show-more'),count=document.getElementById('roar-count');
+function updateVisible(){
+ const rows=[...root.children];
+ rows.forEach((row,i)=>{row.hidden=i>=visibleCount;});
+ if(count)count.textContent='Showing '+Math.min(visibleCount,rows.length)+' of '+rows.length+' verified holders';
+ if(more){more.hidden=visibleCount>=rows.length;more.textContent='SHOW MORE · NEXT '+Math.min(10,Math.max(0,rows.length-visibleCount));}
+}
+more?.addEventListener('click',()=>{visibleCount+=10;updateVisible();});
 const short=a=>a.slice(0,6)+'…'+a.slice(-4);
 const format=(raw,decimals=18)=>{const n=BigInt(raw),base=10n**BigInt(decimals),integer=n/base,frac=n%base;return Number(integer).toLocaleString('en-US')+(frac===0n?'':'.'+String(frac).padStart(decimals,'0').slice(0,2));};
 function valid(d){return d&&d.token?.toLowerCase()==='0xc863041d31b4da4a156a07682e3ea04070121b32'&&d.status==='historical-verified'&&d.isLive===false&&Number.isSafeInteger(d.snapshotBlock)&&Array.isArray(d.ranking)&&d.ranking.length<=100&&d.ranking.every((x,i)=>x.rank===i+1&&/^0x[0-9a-f]{40}$/i.test(x.address)&&/^\d+$/.test(x.balanceRaw));}
 function render(d,label){
  if(!valid(d))throw Error('Invalid verified test snapshot');
  if(current&&d.snapshotBlock<current.snapshotBlock)throw Error('Older snapshot ignored');
- if(current&&d.snapshotBlock===current.snapshotBlock){status.textContent=d.ranking.length+' verified balances · Block '+d.snapshotBlock.toLocaleString()+' · No new snapshot · checked '+new Date().toLocaleTimeString();return;}
+ if(current&&d.snapshotBlock===current.snapshotBlock){updateVisible();
+ status.textContent=d.ranking.length+' verified balances · Block '+d.snapshotBlock.toLocaleString()+' · No new snapshot · checked '+new Date().toLocaleTimeString();return;}
  current=d;source=label;root.replaceChildren();
  // Adaptive test odds: a smooth ranking curve, not fixed tier budgets for N<100.
  // N=100 retains the original 60/30/10 benchmark. At N=52 the top rank
@@ -59,7 +68,7 @@ function render(d,label){
  for(let i=1;i<odds.length;i++)if(!(odds[i-1]>odds[i]))throw Error('Chance must decrease strictly by rank');
  const exactTierFit=activeCount===100;
 
- for(let i=0;i<100;i++){
+ for(let i=0;i<activeCount;i++){
   const x=d.ranking[i],row=document.createElement('div');row.className='rank-row'+(i<3?' top-three':'');
   const rank=document.createElement('span');rank.className='rank '+(i===0?'gold':i===1?'silver':i===2?'bronze':'red');rank.textContent='#'+String(i+1).padStart(3,'0');row.append(rank);
   const who=document.createElement('span');who.className='roar-name';who.textContent=x?('Holder '+String(i+1).padStart(3,'0')):'—';
@@ -77,6 +86,7 @@ function render(d,label){
   }else chance.textContent='—';
   row.append(chance);root.append(row);
  }
+ updateVisible();
  status.textContent=d.ranking.length+' verified balances · Block '+d.snapshotBlock.toLocaleString()+' · '+label+' · Historical, NOT live · Odds TEST normalized over '+activeCount+' active positions · checked '+new Date().toLocaleTimeString();
 }
 async function fetchSnapshot(url){const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),12000);try{const r=await fetch(url+(url.includes('?')?'&':'?')+'t='+Date.now(),{cache:'no-store',signal:controller.signal});if(!r.ok)throw Error('HTTP '+r.status);return await r.json();}finally{clearTimeout(timer);}}

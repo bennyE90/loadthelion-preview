@@ -48,6 +48,17 @@ def parse(text, base, source):
 for name in ('index.html', 'home.html', 'load-intro-v6-mobile.mp4'):
     if not (ROOT / name).is_file():
         errors.append(f'Missing entry file: {name}')
+# The public $LOAD site must never ship the unrelated token experiment.
+for path in ROOT.rglob('*'):
+    if path.is_file() and 'ultcrow' in path.name.lower():
+        errors.append(f'Test data in publish directory: {path.name}')
+for name in ('home.html', 'roar.html', 'tokenomics.html'):
+    path = ROOT / name
+    if not path.is_file():
+        errors.append(f'Missing official page: {name}')
+    elif 'ultcrow' in path.read_text(encoding='utf-8').lower():
+        errors.append(f'Experimental token reference in official page: {name}')
+
 for path in ROOT.rglob('*'):
     if path.is_symlink():
         errors.append(f'Symlink in publish directory: {path}')
