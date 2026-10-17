@@ -33,6 +33,8 @@ home=home.replace(/<a class="nav-settings-link"[^>]*>SETTINGS<\/a>/g,'');
 home=home.replace('</nav>','<a class="nav-settings-link" href="settings.html">SETTINGS</a></nav>');
 home=home.replace(/<button class="hero-wallet-cta"[\s\S]*?<\/button>/g,'');
 home=home.replace('</h1><p class="v74-intro">','</h1><button class="hero-wallet-cta" data-open-wallet type="button" aria-haspopup="dialog" aria-controls="wallet-dialog">CONNECT WALLET <span aria-hidden="true">↗</span></button><p class="v74-intro">');
+const homeContent=await readFile('profile-service/public/home-content.html','utf8');
+home=home.replace(/<div class="v74-home-content">[\s\S]*?(?=<\/main>)/,homeContent+'\n');
 await writeFile('site/home.html',home);
 let roar=await readFile('site/roar.html','utf8');
 roar=roar.replace('<p><a class="back" href="profile.html" target="_top">CONNECT WALLET · EDIT PROFILE</a></p>','');
