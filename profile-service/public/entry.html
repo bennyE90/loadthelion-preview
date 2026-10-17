@@ -19,9 +19,11 @@ main{position:fixed;inset:0;background:#030308}video{position:absolute;inset:0;w
 .entry-join{font:400 clamp(28px,7vw,42px)/1.2 'LOAD Street',Impact,sans-serif;letter-spacing:.15em;text-shadow:0 2px 12px #b8223b66}
 #enter:hover .entry-mark{filter:drop-shadow(0 0 30px #f22a5966)}
 @media(max-height:500px){#enter{gap:20px}.entry-mark{height:160px;transform:skew(-17deg) rotate(-8deg) scale(.7);margin:-25px 0}}
+
+#enter{gap:22px}.entry-mark.entry-official-a{display:block;width:clamp(220px,35vw,280px);height:auto;aspect-ratio:530/590;transform:none;filter:drop-shadow(0 0 18px #d0173333)}.entry-join{font-size:clamp(23px,5.5vw,29px);letter-spacing:.13em;text-shadow:none}#enter:hover .entry-mark{filter:drop-shadow(0 0 22px #e8234944)}@media(max-height:500px){.entry-mark.entry-official-a{width:160px;margin:0}#enter{gap:16px}}
 </style></head><body><main>
 <video id="movie" src="load-intro-v6-mobile.mp4" playsinline webkit-playsinline preload="auto"></video>
-<div id="entry"><button id="enter" type="button" aria-label="Join LoadTheLion — play intro" onclick="enterIntro()"><span class="entry-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="entry-join">JOIN</span></button></div>
+<div id="entry"><button id="enter" type="button" aria-label="Join LoadTheLion — play intro" onclick="enterIntro()"><svg class="entry-mark entry-official-a" viewBox="740 0 530 590" aria-hidden="true" focusable="false"><defs><clipPath id="official-a-clip"><polygon points="1148,0 1156,32 1148,62 1165,48 1163,124 1188,242 1254,271 1244,307 1198,341 1230,462 1240,550 1165,490 1095,347 1012,478 947,558 967,501 867,573 891,508 760,585 812,481 935,279 1054,102"/></clipPath></defs><image href="assets/loadthelion-official-logo.webp" width="1774" height="887" clip-path="url(#official-a-clip)"/></svg><span class="entry-join">JOIN</span></button></div>
 <div id="veil"></div><button id="fallback" class="btn" onclick="enterIntro()">▶ RIPROVA INTRO</button>
 <div class="controls" id="controls"><button id="sound" class="btn" onclick="soundToggle()">♪ AUDIO ON</button><a class="btn skip" href="home.html?v=20261017-boost1">SKIP <span>→</span></a></div>
 </main><script>
