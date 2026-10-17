@@ -20,7 +20,7 @@ export function createRoarFeed({fetcher=fetch,now=()=>Date.now()}={}){
     const snapshot=accept(await response.json());etag=response.headers.get('etag');return {snapshot,state:'live'};
    }catch{
     if(current)return {snapshot:current,state:'retained'};
-    try{const response=await fetcher('roar-snapshot.json',{cache:'no-cache',signal});if(!response.ok)throw Error('No backup');return {snapshot:accept(await response.json()),state:'saved'};}catch{return {snapshot:null,state:'unavailable'};}
+    try{const response=await fetcher('roar-snapshot.json',{cache:'no-cache',signal:AbortSignal.timeout(5000)});if(!response.ok)throw Error('No backup');return {snapshot:accept(await response.json()),state:'saved'};}catch{return {snapshot:null,state:'unavailable'};}
    }
   }
  };

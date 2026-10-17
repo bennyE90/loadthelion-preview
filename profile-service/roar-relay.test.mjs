@@ -68,6 +68,11 @@ test('feed uses the saved snapshot on first-load API failure, then recovers',asy
  assert.equal((await feed.read()).state,'saved');live=true;assert.equal((await feed.read()).state,'live');
  const unavailable=createRoarFeed({fetcher:async()=>{throw Error('offline')}});assert.deepEqual(await unavailable.read(),{snapshot:null,state:'unavailable'});
 });
+test('a timed-out API request cannot cancel the independent saved backup',async()=>{
+ const controller=new AbortController();controller.abort();
+ const feed=createRoarFeed({now:()=>now,fetcher:async(url,options)=>{if(url.startsWith('/'))throw Error('API timed out');assert.equal(options.signal.aborted,false);return Response.json(fixture())}});
+ assert.equal((await feed.read(controller.signal)).state,'saved');
+});
 function archived(){const snapshot=fixture(),eventId=archive.eventId,full={...snapshot,schema:2,eventId,kind:'current',allRanking:snapshot.ranking,excludedAddresses:[],boundary:null},hash=snapshotHash(full),index={environment:'ULTON_TEST',prizesEnabled:false,events:[{id:eventId,snapshots:[{kind:'current',at:snapshot.snapshotTimestamp,block:snapshot.snapshotBlock,hash}]}]};return {snapshot,full,hash,index}}
 test('server reader pins all reads to the same private commit and coalesces concurrent refreshes',async()=>{
  const data=archived(),calls=[];let time=now;

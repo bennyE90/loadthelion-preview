@@ -4,14 +4,14 @@
   "chainId": 25,
   "token": "0x7ebfd1b08e1d7413d6d8fe6c3eef28945ce776ef",
   "decimals": 18,
-  "snapshotTimestamp": 1792237284,
-  "snapshotBlock": 100475440,
+  "snapshotTimestamp": 1792238644,
+  "snapshotBlock": 100478495,
   "eventStart": 1791763200,
   "complete": true,
   "balancesVerified": true,
   "openingBalancesVerified": true,
   "dexClassificationVerified": true,
-  "eligibleWallets": 157,
+  "eligibleWallets": 156,
   "coverage": "FULL_TRANSFER_HISTORY_EOA_TEST",
   "ranking": [
     {
@@ -117,15 +117,15 @@
       "rank": 17
     },
     {
-      "address": "0x0b96cfbd594c010bda8cc6cf728ba0bfc9bad1f7",
-      "balanceRaw": "22983444766311331974156276",
-      "boostStartedAt": null,
-      "rank": 18
-    },
-    {
       "address": "0xb4e4f45522ccb220a16f44ff74f7873c57e9c455",
       "balanceRaw": "8109120678652154463800530",
       "boostStartedAt": 1791763200,
+      "rank": 18
+    },
+    {
+      "address": "0x0b96cfbd594c010bda8cc6cf728ba0bfc9bad1f7",
+      "balanceRaw": "22983444766311331974156276",
+      "boostStartedAt": null,
       "rank": 19
     },
     {
@@ -1228,17 +1228,17 @@
   },
   "audit": {
     "deploymentBlock": 96210581,
-    "snapshotBlockHash": "0x40e86a36cd0577a408a09feca63ea47fdc02191791ab536ada206360ce9b2ec8",
+    "snapshotBlockHash": "0x13bfb397fe029b8e209b491405c2e1e4e22c8d6297d2b23a24be556dcf39b0ef",
     "openingBlock": 99358458,
     "dayBlock": 100375146,
-    "transfers": 11518,
+    "transfers": 11519,
     "historicalWallets": 420,
     "classifiedBuyTransfers": 1520,
     "excludedContracts": 60,
     "excludedBurnAddresses": 1,
-    "activeHolders": 169,
-    "zeroBalanceAddresses": 251,
-    "eligiblePlainWallets": 125,
+    "activeHolders": 168,
+    "zeroBalanceAddresses": 252,
+    "eligiblePlainWallets": 124,
     "eligibleDelegatedWallets": 32,
     "excludedActiveContracts": 11,
     "excludedActiveBurnAddresses": 1,
@@ -1246,6 +1246,6 @@
   },
   "prizesEnabled": false,
   "rulesHash": "92c7c196c24fdf85727902ec410cb4a440a549220df83196a87b091fdbdf6308",
-  "blockHash": "0x40e86a36cd0577a408a09feca63ea47fdc02191791ab536ada206360ce9b2ec8",
+  "blockHash": "0x13bfb397fe029b8e209b491405c2e1e4e22c8d6297d2b23a24be556dcf39b0ef",
   "schema": 1
 }

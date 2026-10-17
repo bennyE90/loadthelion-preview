@@ -15,7 +15,7 @@ export function verifySnapshot(d){
  if(!['complete','balancesVerified','openingBalancesVerified','dexClassificationVerified'].every(k=>d[k]===true))throw Error('Incomplete verification');
  if(!validRanks(d.ranking))throw Error('Invalid ranking');
  const rows=d.ranking.map(r=>({...r,address:r.address.toLowerCase(),...score(r,d.snapshotTimestamp,d.eventStart)}));
- for(let i=1;i<rows.length;i++)if(rows[i].pointsNumerator>rows[i-1].pointsNumerator)throw Error('Ranking is not ordered by points');
+ for(let i=1;i<rows.length;i++)if(rows[i].pointsNumerator>rows[i-1].pointsNumerator||rows[i].pointsNumerator===rows[i-1].pointsNumerator&&rows[i].address<rows[i-1].address)throw Error('Ranking is not ordered by points and address');
  return {...d,ranking:rows};
 }
 export function movements(current,baseline){
