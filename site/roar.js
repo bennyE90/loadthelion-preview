@@ -1,4 +1,4 @@
-import {BOOST_SECONDS,verifySnapshot,movements,formatAmount,formatBoost} from './roar-data.mjs?v=20261017-boost1';
+import {BOOST_SECONDS,eventStart,verifySnapshot,movements,formatAmount,formatBoost} from './roar-data.mjs?v=20261017-boost1';
 const root=document.getElementById('roar-rows'),more=document.getElementById('roar-show-more'),count=document.getElementById('roar-count'),status=document.getElementById('roar-data-status');
 const oddsResponse=await fetch('probabilities.json?v=20261017-chance1');
 if(!oddsResponse.ok)throw Error('Chance table unavailable');
@@ -34,3 +34,13 @@ async function refresh(){
  }catch(e){if(status)status.textContent=current?'Update unavailable · retaining last verified snapshot':'Verified snapshot unavailable · no points or movement data displayed'}finally{clearTimeout(timer);busy=false}
 }
 refresh();setInterval(()=>{if(!document.hidden)refresh()},300000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh()});
+
+function updateCountdown(){
+ const now=Math.floor(Date.now()/1000),start=current?current.eventStart:eventStart(now),end=start+7*86400;
+ let remaining=Math.max(0,end-now);
+ for(const [id,seconds] of [['roar-days',86400],['roar-hours',3600],['roar-minutes',60],['roar-seconds',1]]){const el=document.getElementById(id);if(el)el.textContent=String(Math.floor(remaining/seconds)).padStart(2,'0');remaining%=seconds}
+ document.getElementById('roar-clock-mode').textContent=current?(now>=end?'EVENT CLOSED':'WEEKLY EVENT · UTC'):'WEEKLY TIMER · TEST';
+ const close=new Date((end-1)*1000);
+ document.getElementById('roar-clock-deadline').textContent='ENDS '+close.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric',timeZone:'UTC'}).toUpperCase()+' · 23:59:59 UTC'+(current?'':' · PRE-LAUNCH PREVIEW');
+}
+updateCountdown();setInterval(updateCountdown,1000);
