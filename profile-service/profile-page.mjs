@@ -8,9 +8,9 @@ export function mountProfile(root,{projectId}){
  function locked(value){busy=value;buttons().forEach(b=>b.disabled=value)}
  function clear(){form.hidden=true;form.reset();find('[data-address]').textContent='';find('[data-qr]').hidden=true;find('[data-pairing]').hidden=true;status.textContent='Disconnected. Sign in again to edit your profile.'}
  async function run(fn){if(busy)return;locked(true);try{await fn()}catch(e){status.textContent=e.code===4001?'Request cancelled.':e.message||'Connection failed.'}finally{locked(false)}}
- async function connect(mode,selected){status.textContent='Choose your wallet and confirm profile sign-in.';if(unwatch)unwatch();await fetch('/api/profile/logout',{method:'POST',credentials:'same-origin'});clear();
+ async function connect(mode,selected){status.textContent='Choose your wallet and confirm profile sign-in.';if(unwatch)unwatch();await fetch('/api/profile/logout',{method:'POST',credentials:'same-origin'});clear();status.textContent='Choose your wallet and confirm profile sign-in.';
   if(mode==='injected'){if(!selected?.request)throw Error('Choose a browser wallet first.');provider=selected}
-  else provider=await walletConnect({projectId,onUri:async uri=>{find('[data-qr]').hidden=false;find('[data-pairing]').hidden=false;await QRCode.toCanvas(find('[data-qr]'),uri,{width:256,margin:2})}});
+  else provider=await walletConnect({projectId,onUri:async uri=>{status.textContent='Scan the QR code with your wallet to continue.';find('[data-qr]').hidden=false;find('[data-pairing]').hidden=false;await QRCode.toCanvas(find('[data-qr]'),uri,{width:256,margin:2})}});
   unwatch=await watchWallet(provider,clear);const user=await signIn(provider);const profile=await loadProfile();form.elements.nickname.value=profile.nickname||'';form.hidden=false;find('[data-qr]').hidden=true;find('[data-pairing]').hidden=true;find('[data-address]').textContent=user.address;status.textContent='Wallet verified. You can now edit your profile.';
  }
  const known=new Set();
