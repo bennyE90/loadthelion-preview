@@ -146,7 +146,7 @@ body{background:#08070e url(assets/a4029ae6eeb77fca35.webp) center top/cover fix
 /* V22: interactions, scroll, keyboard navigation */
 html{scroll-padding-top:112px}section[id]{scroll-margin-top:112px}
 #scroll-progress{position:fixed;left:0;top:0;width:0;height:3px;z-index:80;background:linear-gradient(90deg,#bc2038,#ff6576);box-shadow:0 0 12px #ef395c80;pointer-events:none;transition:width .09s linear}
-#back-to-top{position:fixed;right:17px;bottom:19px;z-index:45;width:48px;height:48px;border-radius:50%;background:#1b1322e8;border:1px solid #df4760;color:#fff;font-size:1.55rem;box-shadow:0 6px 22px #0009;opacity:0;visibility:hidden;transform:translateY(14px);transition:opacity .25s,transform .25s,visibility .25s}
+#back-to-top{position:fixed;right:17px;bottom:calc(78px + env(safe-area-inset-bottom));z-index:45;width:48px;height:48px;border-radius:50%;background:#1b1322e8;border:1px solid #df4760;color:#fff;font-size:1.55rem;box-shadow:0 6px 22px #0009;opacity:0;visibility:hidden;transform:translateY(14px);transition:opacity .25s,transform .25s,visibility .25s}
 #back-to-top.visible{opacity:1;visibility:visible;transform:translateY(0)}
 .nav a{position:relative;transition:color .2s}
 .nav a.active{color:#f8c27b}.nav a.active:after{content:'';position:absolute;bottom:-7px;left:0;right:0;height:2px;background:#ef425b}
