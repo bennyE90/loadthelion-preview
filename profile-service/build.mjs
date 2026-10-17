@@ -51,6 +51,7 @@ home=home.replace('</button><p class="v74-intro">','</button><a class="hero-lege
 const homeContent=await readFile('profile-service/public/home-content.html','utf8');
 home=home.replace(/<div class="v74-home-content">[\s\S]*?(?=<\/main>)/,homeContent+'\n');
 const dashboardContent=await readFile('profile-service/public/dashboard-content.html','utf8');
+home=home.replace(/<style id="dashboard-home-monitor">[\s\S]*?<\/style>/g,'');
 home=home.replace(/<section aria-label="\$LOAD Dashboard"[\s\S]*?<\/section>/,dashboardContent);
 await writeFile('site/home.html',home);
 let roar=await readFile('site/roar.html','utf8');
