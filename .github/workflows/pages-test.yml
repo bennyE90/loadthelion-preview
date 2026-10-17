@@ -1,20 +1,17 @@
-name: Publish LoadTheLion TEST ZIP
+name: Deploy LoadTheLion preview manually
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'site.zip'
-      - '.github/workflows/pages-test.yml'
   workflow_dispatch:
 permissions:
   contents: read
-  pages: write
-  id-token: write
 concurrency:
   group: pages-test
   cancel-in-progress: false
 jobs:
   deploy:
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -22,31 +19,11 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
-      - name: Unpack approved static test ZIP
-        shell: bash
-        run: |
-          set -euo pipefail
-          test -s site.zip || { echo "Upload site.zip before publishing"; exit 1; }
-          mkdir -p _site
-          python3 - <<'PY'
-          from zipfile import ZipFile
-          from pathlib import Path
-          with ZipFile('site.zip') as z:
-              for f in z.infolist():
-                  p=Path(f.filename)
-                  if p.is_absolute() or '..' in p.parts or f.filename.startswith('__MACOSX/'):
-                      raise SystemExit('Unsafe ZIP path: '+f.filename)
-                  if f.is_dir(): continue
-                  if f.file_size > 30_000_000: raise SystemExit('Unexpectedly large file')
-                  out=Path('_site')/p
-                  out.parent.mkdir(parents=True,exist_ok=True)
-                  out.write_bytes(z.read(f))
-          assert Path('_site/index.html').is_file(), 'ZIP must contain index.html at its root'
-          PY
-          touch _site/.nojekyll
+      - name: Validate static site
+        run: python3 scripts/check_site.py
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: _site
+          path: site
       - id: deployment
         uses: actions/deploy-pages@v4

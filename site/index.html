@@ -1,0 +1,23 @@
+<!doctype html><html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>LoadTheLion</title><style>
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;background:#030308;color:white;font-family:system-ui,Arial,sans-serif;overflow:hidden}
+main{position:fixed;inset:0;background:#030308}video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#030308}
+#entry{position:absolute;inset:0;z-index:10;background:radial-gradient(ellipse at center,#1b1019 0%,#06060b 65%,#030308 100%);display:flex;align-items:center;justify-content:center}
+#enter{font-family:Impact,'Arial Black',system-ui,sans-serif;font-weight:900;font-size:clamp(28px,7vw,54px);letter-spacing:.09em;color:#fff;background:linear-gradient(110deg,#ac2039,#5b1026);border:1px solid #fa5c70;border-radius:5px;padding:20px 39px;box-shadow:0 0 28px #d522443b,0 15px 50px #0009;cursor:pointer;transform:skewX(-4deg)}
+#enter:active{transform:skewX(-4deg) scale(.97)}
+.controls{position:absolute;z-index:3;left:16px;right:16px;bottom:calc(22px + env(safe-area-inset-bottom));display:none;align-items:center;justify-content:space-between;gap:14px}
+.btn{appearance:none;display:inline-flex;align-items:center;justify-content:center;min-height:43px;padding:11px 17px;border:1px solid #ffffff55;border-radius:99px;background:#070911a8;color:#fff;text-decoration:none;letter-spacing:.12em;font-size:11px;font-weight:750;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);cursor:pointer;box-shadow:0 4px 18px #0006}.skip{border-color:#d9476266;background:#170c17c9}.skip span{color:#ff637a;margin-left:9px}
+#veil{position:absolute;inset:0;z-index:8;pointer-events:none;background:#030308;opacity:0;transition:opacity .5s ease}
+#fallback{display:none;position:absolute;z-index:4;top:50%;left:50%;transform:translate(-50%,-50%);background:#ad1e3b;border-color:#ff657b;font-size:13px;padding:16px 23px}
+</style></head><body><main>
+<video id="movie" src="load-intro-v6-mobile.mp4" playsinline webkit-playsinline preload="auto"></video>
+<div id="entry"><button id="enter" type="button" style="display:block!important;visibility:visible!important;opacity:1!important;position:relative!important;z-index:100!important;background:linear-gradient(135deg,#a70c2c,#200811)!important;color:#fff!important;border:2px solid #f24a60!important;border-radius:3px!important;padding:23px 48px!important;font-family:Impact,'Arial Black',sans-serif!important;font-size:clamp(30px,8vw,52px)!important;letter-spacing:.13em!important;box-shadow:6px 6px 0 #090409,0 0 25px #d02045!important;transform:skewX(-7deg)!important" onclick="enterIntro()">ENTER IN</button></div>
+<div id="veil"></div><button id="fallback" class="btn" onclick="enterIntro()">▶ RIPROVA INTRO</button>
+<div class="controls" id="controls"><button id="sound" class="btn" onclick="soundToggle()">♪ AUDIO ON</button><a class="btn skip" href="home.html">SKIP <span>→</span></a></div>
+</main><script>
+var movie=document.getElementById('movie'),entry=document.getElementById('entry'),fallback=document.getElementById('fallback'),sound=document.getElementById('sound'),controls=document.getElementById('controls'),leaving=false;
+function goHome(){if(leaving)return;leaving=true;location.replace('home.html')}
+function enterIntro(){entry.style.display='none';fallback.style.display='none';controls.style.display='flex';movie.muted=false;movie.currentTime=0;syncSound();var p=movie.play();if(p&&p.catch)p.catch(function(){fallback.style.display='block'})}
+function syncSound(){sound.textContent=movie.muted?'◖)) ATTIVA AUDIO':'♪ AUDIO ON'}
+function soundToggle(){movie.muted=!movie.muted;syncSound()}
+movie.addEventListener('ended',goHome);movie.addEventListener('error',function(){fallback.style.display='block';fallback.textContent='▶ RIPROVA VIDEO'});
+</script></body></html>
