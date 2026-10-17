@@ -5,6 +5,7 @@ if(!oddsResponse.ok)throw Error('Chance table unavailable');
 const {probabilitiesPercent:odds}=await oddsResponse.json();
 if(!Array.isArray(odds)||odds.length!==100||odds.some((x,i)=>!Number.isFinite(x)||x<=0||(i&&x>=odds[i-1]))||Math.abs(odds.reduce((a,b)=>a+b,0)-100)>1e-9)throw Error('Invalid chance table');
 const chanceFormat=new Intl.NumberFormat('en-US',{minimumFractionDigits:2,maximumFractionDigits:4});
+const less=document.getElementById('roar-show-less');
 let visible=10,current=null,busy=false;
 function cell(cls,text){const el=document.createElement('span');el.className=cls;el.textContent=text;return el}
 function render(snapshot,baseline){
@@ -22,7 +23,8 @@ function render(snapshot,baseline){
  }
  show();
 }
-function show(){const total=root.children.length;[...root.children].forEach((row,i)=>{row.hidden=i>=visible});count.textContent='Showing '+Math.min(visible,total)+' of '+total+(current?' verified positions':' reserved positions · No live ranking');more.hidden=visible>=total;more.textContent='SHOW MORE · NEXT '+Math.min(10,Math.max(0,total-visible))}
+function show(){const total=root.children.length;[...root.children].forEach((row,i)=>{row.hidden=i>=visible});count.textContent='Showing '+Math.min(visible,total)+' of '+total+(current?' verified positions':' reserved positions · No live ranking');less.hidden=visible<=10;more.hidden=visible>=total;more.textContent='SHOW MORE · NEXT '+Math.min(10,Math.max(0,total-visible))}
+less.addEventListener('click',()=>{visible=10;show();const first=root.querySelector('.rank-row');first?.scrollIntoView({block:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});more.focus({preventScroll:true})});
 more.addEventListener('click',()=>{visible=Math.min(100,visible+10);show()});render(null,null);
 async function refresh(){
  if(busy)return;busy=true;const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),12000);
