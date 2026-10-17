@@ -22,11 +22,15 @@ prize payout service. Full rankings and proof remain in the private archive.
 Private project mode: Netlify protection rejects external requests before
 Functions execute, including the prepared OIDC publisher. The workflow variable
 `ROAR_SITE_PUBLISH_ENABLED` stays unset. Instead the site supports server-side
-reading through the existing private login, enabled by a Functions-scoped secret
-environment variable `ROAR_ARCHIVE_READ_TOKEN`. The GitHub fine-grained token
+reading through the existing private login, enabled by a secret environment
+variable `ROAR_ARCHIVE_READ_TOKEN` available to Functions. The GitHub fine-grained token
 must grant Contents: read-only to `bennyE90/loadthelion-indexer` only; it needs no
 write, Actions or account permissions. Create/store it through the providers'
 secure settings, never chat, code or browser cookies.
+On Netlify Personal the secret scopes also include Builds and Runtime; separate
+Functions-only scope selection requires a different plan. No upgrade is needed.
+Set the secret for Production and Deploy Previews, leave local development
+empty and redeploy after saving it. Untrusted deploys keep requiring approval.
 
 The reader pins latest/index/full ranking to one archive commit, verifies both
 content hashes and matching rankings, returns only the public Top 100 and reuses

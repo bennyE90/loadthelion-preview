@@ -4,14 +4,14 @@
   "chainId": 25,
   "token": "0x7ebfd1b08e1d7413d6d8fe6c3eef28945ce776ef",
   "decimals": 18,
-  "snapshotTimestamp": 1792238644,
-  "snapshotBlock": 100478495,
+  "snapshotTimestamp": 1792239360,
+  "snapshotBlock": 100480242,
   "eventStart": 1791763200,
   "complete": true,
   "balancesVerified": true,
   "openingBalancesVerified": true,
   "dexClassificationVerified": true,
-  "eligibleWallets": 156,
+  "eligibleWallets": 157,
   "coverage": "FULL_TRANSFER_HISTORY_EOA_TEST",
   "ranking": [
     {
@@ -141,15 +141,15 @@
       "rank": 21
     },
     {
-      "address": "0x6563f4dd51357ccee8f961d87e2ad70adc140f36",
-      "balanceRaw": "7168214359350691967541173",
-      "boostStartedAt": 1791763200,
-      "rank": 22
-    },
-    {
       "address": "0x2c7837cdec47b0366ef3ffac4710607e7b4bf058",
       "balanceRaw": "7733012746861948819544512",
       "boostStartedAt": 1791816863,
+      "rank": 22
+    },
+    {
+      "address": "0x6563f4dd51357ccee8f961d87e2ad70adc140f36",
+      "balanceRaw": "7168214359350691967541173",
+      "boostStartedAt": 1791763200,
       "rank": 23
     },
     {
@@ -526,7 +526,7 @@
     },
     {
       "address": "0x580837bf30d5e3ec24c409887e809ffd11ef4bed",
-      "balanceRaw": "185247087924359636297138",
+      "balanceRaw": "185248164954213119905973",
       "boostStartedAt": 1792095606,
       "rank": 86
     },
@@ -1228,24 +1228,24 @@
   },
   "audit": {
     "deploymentBlock": 96210581,
-    "snapshotBlockHash": "0x13bfb397fe029b8e209b491405c2e1e4e22c8d6297d2b23a24be556dcf39b0ef",
+    "snapshotBlockHash": "0x7071a84b351dffbaffd3877d5307eedce4c2a84f167ac2c22cc0bd022c1d944c",
     "openingBlock": 99358458,
     "dayBlock": 100375146,
-    "transfers": 11519,
-    "historicalWallets": 420,
+    "transfers": 11522,
+    "historicalWallets": 421,
     "classifiedBuyTransfers": 1520,
     "excludedContracts": 60,
     "excludedBurnAddresses": 1,
-    "activeHolders": 168,
+    "activeHolders": 169,
     "zeroBalanceAddresses": 252,
-    "eligiblePlainWallets": 124,
+    "eligiblePlainWallets": 125,
     "eligibleDelegatedWallets": 32,
     "excludedActiveContracts": 11,
     "excludedActiveBurnAddresses": 1,
     "prizesEnabled": false
   },
   "prizesEnabled": false,
-  "rulesHash": "92c7c196c24fdf85727902ec410cb4a440a549220df83196a87b091fdbdf6308",
-  "blockHash": "0x13bfb397fe029b8e209b491405c2e1e4e22c8d6297d2b23a24be556dcf39b0ef",
+  "rulesHash": "4cee1df92e805e27a7aaa4f2c973d52c6fc6d7f209ea071930c4457bf2898913",
+  "blockHash": "0x7071a84b351dffbaffd3877d5307eedce4c2a84f167ac2c22cc0bd022c1d944c",
   "schema": 1
 }
