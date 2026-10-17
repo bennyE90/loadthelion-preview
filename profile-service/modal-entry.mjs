@@ -5,6 +5,7 @@ let mounted=false,loading=false,opener;
 async function openWallet(event){
  event?.preventDefault();opener=event?.currentTarget;
  document.querySelector('#nav')?.classList.remove('open');
+ const menu=document.getElementById('menu');menu?.setAttribute('aria-expanded','false');menu?.setAttribute('aria-label','Open navigation menu');
  dialog.showModal();document.documentElement.classList.add('wallet-modal-open');
  if(mounted||loading)return;loading=true;root.textContent='Preparing wallet profiles…';
  try{
@@ -17,4 +18,4 @@ async function openWallet(event){
 document.querySelectorAll('[data-open-wallet]').forEach(button=>button.addEventListener('click',openWallet));
 dialog.querySelector('[data-close-wallet]').addEventListener('click',()=>dialog.close());
 dialog.addEventListener('click',event=>{if(event.target===dialog){const r=dialog.getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)dialog.close()}});
-dialog.addEventListener('close',()=>{document.documentElement.classList.remove('wallet-modal-open');opener?.focus()});
+dialog.addEventListener('close',()=>{root.dispatchEvent(new Event('wallet-profile-close'));document.documentElement.classList.remove('wallet-modal-open');opener?.focus()});

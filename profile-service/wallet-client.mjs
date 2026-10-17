@@ -1,16 +1,14 @@
+import {pairWallet} from './wallet-pairing.mjs';
 // Bundle this module locally; never import an unpinned remote CDN script.
 import {EthereumProvider} from '@walletconnect/ethereum-provider';
 export const CRONOS=25;
 export const WALLET_METHODS=Object.freeze(['personal_sign']);
 const account=a=>typeof a==='string'&&/^0x[0-9a-f]{40}$/i.test(a);
-export async function walletConnect({projectId,onUri,onProvider}){
+export async function walletConnect({projectId,onUri,signal}){
  if(!/^[a-f0-9]{32}$/i.test(projectId||''))throw Error('WalletConnect is not configured');
- const provider=await EthereumProvider.init({projectId,chains:[CRONOS],methods:[...WALLET_METHODS],optionalMethods:[],events:['accountsChanged','chainChanged'],optionalEvents:[],showQrModal:false,metadata:{name:'LoadTheLion',description:'Profile sign-in only. No transactions or spending permissions.',url:location.origin,icons:[]}});
- onProvider?.(provider);
- provider.on('display_uri',onUri);
- await provider.connect();
- return provider;
+ return pairWallet({signal,onUri,createProvider:()=>EthereumProvider.init({projectId,chains:[CRONOS],methods:[...WALLET_METHODS],optionalMethods:[],events:['accountsChanged','chainChanged'],optionalEvents:[],showQrModal:false,metadata:{name:'LoadTheLion',description:'Profile sign-in only. No transactions or spending permissions.',url:location.origin,icons:[]}})});
 }
+
 async function api(path,options={}){const response=await fetch('/api/profile/'+path,{...options,credentials:'same-origin',cache:'no-store'});if(!response.ok)throw Error('Profile service rejected the request');return response.json()}
 export async function signIn(provider){
  const chain=await provider.request({method:'eth_chainId'});
