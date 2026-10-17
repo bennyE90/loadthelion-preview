@@ -15,7 +15,7 @@ async function page({missing=false,offline=false}={}){
  return {nodes,advance(ms){now+=ms;ticks.filter(x=>x.ms===1000).forEach(x=>x.fn())}};
 }
 test('dashboard presents price, independent market metrics and the exact token links',async()=>{
- const p=await page();assert.equal(p.nodes.get('market-price').textContent,'$0.0002690');assert.equal(p.nodes.get('market-cap').textContent,'$123,456');assert.equal(p.nodes.get('market-fdv').textContent,'$234,567');assert.equal(p.nodes.get('market-change').textContent,'-3.25%');assert.equal(p.nodes.get('market-change').className,'negative');assert.equal(p.nodes.get('market-trades').textContent,'5 / 7');assert.equal(p.nodes.get('market-contract').textContent,MARKET.token);assert(p.nodes.get('market-chart').href.endsWith(MARKET.pair));
+ const p=await page();assert.equal(p.nodes.get('market-price').textContent,'$0.0002690');assert.equal(p.nodes.get('market-cap').textContent,'$123,456');assert.equal(p.nodes.has('market-fdv'),false);assert.equal(p.nodes.get('market-change').textContent,'-3.25%');assert.equal(p.nodes.get('market-change').className,'negative');assert.equal(p.nodes.get('market-trades').textContent,'5 / 7');assert.equal(p.nodes.get('market-contract').textContent,MARKET.token);assert(p.nodes.get('market-chart').href.endsWith(MARKET.pair));
 });
 test('missing values stay blank, and old prices and metrics expire together',async()=>{
  const p=await page({missing:true});assert.equal(p.nodes.get('market-cap').textContent,'—');assert.equal(p.nodes.get('market-change').textContent,'—');p.advance(601000);for(const id of ['market-price','market-liquidity','market-volume','market-trades'])assert.equal(p.nodes.get(id).textContent,'—');

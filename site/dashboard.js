@@ -8,7 +8,7 @@ let quote=null,busy=false,failed=false;
 function render(){
  let current=null;try{current=validatePrice(quote)}catch{}
  el('market-price').textContent=current?'$'+current.priceUsd:'—';
- for(const [id,key] of [['market-cap','marketCapUsd'],['market-fdv','fdvUsd'],['market-liquidity','liquidityUsd'],['market-volume','volume24hUsd']])el(id).textContent=current&&typeof current[key]==='number'&&Number.isFinite(current[key])&&current[key]>=0?money.format(current[key]):'—';
+ for(const [id,key] of [['market-cap','marketCapUsd'],['market-liquidity','liquidityUsd'],['market-volume','volume24hUsd']])el(id).textContent=current&&typeof current[key]==='number'&&Number.isFinite(current[key])&&current[key]>=0?money.format(current[key]):'—';
  const change=current?.change24h;el('market-change').textContent=typeof change==='number'&&Number.isFinite(change)?(change>0?'+':'')+change.toFixed(2)+'%':'—';el('market-change').className=typeof change==='number'?(change>0?'positive':change<0?'negative':''):'';
  el('market-trades').textContent=current&&Number.isSafeInteger(current.buys24h)&&Number.isSafeInteger(current.sells24h)?current.buys24h+' / '+current.sells24h:'—';
  el('market-status').textContent=current?((failed||current.status==='stale'?'Last available quote':'DEX Screener quote')+' · checked '+new Date(current.observedAt*1000).toISOString().replace('T',' ').replace('.000Z',' UTC')+' · '+Math.max(0,Math.floor(Date.now()/1000)-current.observedAt)+'s ago'):'Market data unavailable · waiting for a valid quote';
