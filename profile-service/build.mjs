@@ -20,6 +20,10 @@ const {createHash}=await import('node:crypto');
 const digest=createHash('sha256').update(await readFile('site/wallet-modal.js')).digest('base64');
 const css=await readFile('profile-service/public/modal.css','utf8');
 let home=await readFile('site/home.html','utf8');
+const streetFont=home.match(/@font-face\{font-family:'LOAD Street';src:url\(data:font\/ttf;base64,([A-Za-z0-9+/=]+)\)/);
+if(!streetFont)throw Error('Home street font not found');
+await writeFile('site/assets/load-street.ttf',Buffer.from(streetFont[1],'base64'));
+
 home=home.replaceAll('assets/03c8549b61bca52abb.png','assets/loadthelion-official-logo.webp');
 const brandCss=await readFile('profile-service/public/brand-home.css','utf8');
 home=home.replace(/<style id="brand-home-refresh">[\s\S]*?<\/style>/g,'').replace('</head>',`<style id="brand-home-refresh">${brandCss}</style></head>`);
