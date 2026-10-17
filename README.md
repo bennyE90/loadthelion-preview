@@ -46,3 +46,20 @@ not presented as finalized project commitments.
 Checks cover local references and prevent ULTCROW files/references from entering
 the official publish directory. Browser/mobile playback QA remains required;
 static checks alone do not certify device-specific video or rendering behavior.
+
+## Leaderboard presentation
+
+The official table shows token balance, ROAR BOOST, points and chance.
+Boost is displayed with one decimal and a bar from 0 to 200%; there are no
+time estimates or purchase targets. Movement compares the current global ranking with the verified 00:00 UTC
+leaderboard of the same token, chain and weekly event. The fixed daily baseline
+resets at the next midnight UTC; NEW means absent from that midnight Top 100.
+Without a verified midnight baseline no movement is inferred.
+
+`site/roar-snapshot.json` deliberately starts in `awaiting-data` state. The UI
+polls every five minutes and will not display a ranking without complete
+transfer coverage, verified balances, opening balances and DEX classification.
+The current ULTON checkpoint is incomplete, so no ULTON ranking has been
+published or relabeled as $LOAD. Draw percentages remain unpopulated pending
+confirmation. Run `node --test tests/roar-data.test.mjs` for scoring, reset,
+movement, rejection and precision checks.
