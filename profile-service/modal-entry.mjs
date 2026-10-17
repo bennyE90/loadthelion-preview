@@ -19,3 +19,5 @@ document.querySelectorAll('[data-open-wallet]').forEach(button=>button.addEventL
 dialog.querySelector('[data-close-wallet]').addEventListener('click',()=>dialog.close());
 dialog.addEventListener('click',event=>{if(event.target===dialog){const r=dialog.getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)dialog.close()}});
 dialog.addEventListener('close',()=>{root.dispatchEvent(new Event('wallet-profile-close'));document.documentElement.classList.remove('wallet-modal-open');opener?.focus()});
+
+if(location.hash==='#connect-wallet')openWallet();

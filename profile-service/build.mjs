@@ -8,6 +8,10 @@ await writeFile('site/profile-config.json',JSON.stringify({projectId,origin}));
 
 await copyFile('profile-service/public/profile.html','site/profile.html');
 await copyFile('profile-service/public/profile.css','site/profile.css');
+await copyFile('profile-service/public/settings.html','site/settings.html');
+await copyFile('profile-service/public/load-identity-latin.woff','site/assets/load-identity-latin.woff');
+await copyFile('profile-service/public/IDENTITY-FONT-LICENSE.txt','site/assets/IDENTITY-FONT-LICENSE.txt');
+await writeFile('site/settings.css',(await readFile('profile-service/public/modal.css','utf8'))+'\n'+await readFile('profile-service/public/settings.css','utf8'));
 await mkdir('site/wallet-icons',{recursive:true});for(const name of await readdir('profile-service/public/wallet-icons'))await copyFile('profile-service/public/wallet-icons/'+name,'site/wallet-icons/'+name);
 await build({entryPoints:['profile-service/modal-entry.mjs'],bundle:true,format:'esm',platform:'browser',target:['es2022'],minify:true,outfile:'site/wallet-modal.js',legalComments:'eof'});
 const {createHash}=await import('node:crypto');
@@ -18,13 +22,17 @@ home=home.replaceAll('assets/03c8549b61bca52abb.png','assets/loadthelion-officia
 const brandCss=await readFile('profile-service/public/brand-home.css','utf8');
 home=home.replace(/<style id="brand-home-refresh">[\s\S]*?<\/style>/g,'').replace('</head>',`<style id="brand-home-refresh">${brandCss}</style></head>`);
 home=home.replace(/<a class="nav-profile-link"[^>]*>CONNECT WALLET<\/a>/g,'').replace(/<button class="nav-profile-link"[^>]*>CONNECT WALLET<\/button>/g,'');
-home=home.replace('<a href="#faq">FAQ</a></nav>','<a href="#faq">FAQ</a><button class="nav-profile-link" type="button" data-open-wallet aria-haspopup="dialog" aria-controls="wallet-dialog">CONNECT WALLET</button></nav>');
+home=home.replace('<a href="#faq">FAQ</a></nav>','<a href="#faq">FAQ</a><button class="nav-profile-link" type="button" data-open-wallet aria-haspopup="dialog" aria-controls="wallet-dialog">CONNECT WALLET</button><a class="nav-settings-link" href="settings.html">SETTINGS</a></nav>');
 // Idempotent for repeat local builds; upstream home remains unchanged in Git.
 home=home.replace(/<dialog id="wallet-dialog"[\s\S]*?<\/dialog>/g,'').replace(/<script type="module" src="wallet-modal.js"[^>]*><\/script>/g,'').replace(/<style id="wallet-modal-style">[\s\S]*?<\/style>/g,'');
 home=home.replace("connect-src 'none'","connect-src 'self' https://*.walletconnect.com https://*.walletconnect.org https://*.reown.com wss://*.walletconnect.com wss://*.walletconnect.org");
 home=home.replace("; base-uri",` 'sha256-${digest}'; base-uri`);
 home=home.replace('</head>',`<style id="wallet-modal-style">${css}</style></head>`);
 home=home.replace('</body>',`<dialog id="wallet-dialog" class="ltl-wallet-dialog" aria-label="Connect wallet and edit profile"><div class="wallet-modal-head"><img src="assets/loadthelion-official-logo.webp" alt="LoadTheLion" class="wallet-modal-logo"><button type="button" data-close-wallet aria-label="Close wallet window">×</button></div><div data-profile-root></div><aside>Profile sign-in only. No transactions or token spending permissions. Your nickname, avatar and wallet address are public.</aside></dialog><script type="module" src="wallet-modal.js" integrity="sha256-${digest}"></script></body>`);
+home=home.replace(/<a class="nav-settings-link"[^>]*>SETTINGS<\/a>/g,'');
+home=home.replace('</nav>','<a class="nav-settings-link" href="settings.html">SETTINGS</a></nav>');
+home=home.replace(/<button class="hero-wallet-cta"[\s\S]*?<\/button>/g,'');
+home=home.replace('</h1><p class="v74-intro">','</h1><button class="hero-wallet-cta" data-open-wallet type="button" aria-haspopup="dialog" aria-controls="wallet-dialog">CONNECT WALLET <span aria-hidden="true">↗</span></button><p class="v74-intro">');
 await writeFile('site/home.html',home);
 let roar=await readFile('site/roar.html','utf8');
 roar=roar.replace('<p><a class="back" href="profile.html" target="_top">CONNECT WALLET · EDIT PROFILE</a></p>','');

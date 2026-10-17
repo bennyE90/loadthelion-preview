@@ -18,3 +18,11 @@
   for = "/profile-config.json"
   [headers.values]
     Cache-Control = "no-store"
+
+[[headers]]
+  for = "/settings*"
+  [headers.values]
+    Content-Security-Policy = "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' https://*.walletconnect.com https://*.walletconnect.org https://*.reown.com wss://*.walletconnect.com wss://*.walletconnect.org; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'"
+    Referrer-Policy = "no-referrer"
+    X-Content-Type-Options = "nosniff"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
