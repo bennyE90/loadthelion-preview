@@ -19,3 +19,10 @@ body #awakening .awakening-heading{background:linear-gradient(135deg,#0a0a188f,#
 body #home .hero-legend-link{padding:18px 23px;border:1px solid #c797665f;border-radius:12px;background:linear-gradient(90deg,#070912e8,#07091290),url('assets/a641e4dd41a2946115.webp') center 40%/cover no-repeat;min-height:66px;box-shadow:0 8px 24px #0005;color:#f3d7a8}
 body #home .hero-legend-link:hover{border-color:#e1b67d;box-shadow:0 0 22px #a9345833}
 @media(max-width:700px){body #awakening{background-attachment:scroll!important;background-position:60% top!important}body #awakening .awakening-heading{padding:18px 12px}body #home .hero-legend-link{font-size:18px;padding:16px 20px}}
+/* Replay belongs to Home, never to an opened internal page or wallet dialog. */
+body:has(.load-fullpage:target) #v118-replay,
+body:has(#awakening .chapter:target) #v118-replay,
+body:has(#load-dashboard:target) #v118-replay,
+body:has(#tokenomics:target) #v118-replay,
+body:has(#top-100-roar:target) #v118-replay,
+body:has(#wallet-dialog[open]) #v118-replay{display:none!important}
