@@ -69,7 +69,7 @@ def parse(text, base, source):
     Document(base, source).feed(text)
     css(text, base, source)
 
-for name in ('index.html', 'home.html', 'load-intro-v6-mobile.mp4'):
+for name in ('index.html', 'home.html', 'load-intro-v6-mobile.mp4', 'roar.js', 'roar-data.mjs', 'roar-snapshot.json'):
     if not (ROOT / name).is_file():
         errors.append(f'Missing entry file: {name}')
 # The public $LOAD site must never ship the unrelated token experiment.
