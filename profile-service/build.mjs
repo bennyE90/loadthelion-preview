@@ -13,6 +13,9 @@ const {createHash}=await import('node:crypto');
 const digest=createHash('sha256').update(await readFile('site/wallet-modal.js')).digest('base64');
 const css=await readFile('profile-service/public/modal.css','utf8');
 let home=await readFile('site/home.html','utf8');
+home=home.replaceAll('assets/03c8549b61bca52abb.png','assets/loadthelion-official-logo.webp');
+const brandCss=await readFile('profile-service/public/brand-home.css','utf8');
+home=home.replace(/<style id="brand-home-refresh">[\s\S]*?<\/style>/g,'').replace('</head>',`<style id="brand-home-refresh">${brandCss}</style></head>`);
 home=home.replace(/<a class="nav-profile-link"[^>]*>CONNECT WALLET<\/a>/g,'').replace(/<button class="nav-profile-link"[^>]*>CONNECT WALLET<\/button>/g,'');
 home=home.replace('<a href="#faq">FAQ</a></nav>','<a href="#faq">FAQ</a><button class="nav-profile-link" type="button" data-open-wallet aria-haspopup="dialog" aria-controls="wallet-dialog">CONNECT WALLET</button></nav>');
 // Idempotent for repeat local builds; upstream home remains unchanged in Git.
@@ -20,7 +23,7 @@ home=home.replace(/<dialog id="wallet-dialog"[\s\S]*?<\/dialog>/g,'').replace(/<
 home=home.replace("connect-src 'none'","connect-src 'self' https://*.walletconnect.com https://*.walletconnect.org https://*.reown.com wss://*.walletconnect.com wss://*.walletconnect.org");
 home=home.replace("; base-uri",` 'sha256-${digest}'; base-uri`);
 home=home.replace('</head>',`<style id="wallet-modal-style">${css}</style></head>`);
-home=home.replace('</body>',`<dialog id="wallet-dialog" class="ltl-wallet-dialog" aria-label="Connect wallet and edit profile"><div class="wallet-modal-head"><img src="assets/03c8549b61bca52abb.png" alt="LoadTheLion" class="wallet-modal-logo"><button type="button" data-close-wallet aria-label="Close wallet window">×</button></div><div data-profile-root></div><aside>Profile sign-in only. No transactions or token spending permissions. Your nickname, avatar and wallet address are public.</aside></dialog><script type="module" src="wallet-modal.js" integrity="sha256-${digest}"></script></body>`);
+home=home.replace('</body>',`<dialog id="wallet-dialog" class="ltl-wallet-dialog" aria-label="Connect wallet and edit profile"><div class="wallet-modal-head"><img src="assets/loadthelion-official-logo.webp" alt="LoadTheLion" class="wallet-modal-logo"><button type="button" data-close-wallet aria-label="Close wallet window">×</button></div><div data-profile-root></div><aside>Profile sign-in only. No transactions or token spending permissions. Your nickname, avatar and wallet address are public.</aside></dialog><script type="module" src="wallet-modal.js" integrity="sha256-${digest}"></script></body>`);
 await writeFile('site/home.html',home);
 let roar=await readFile('site/roar.html','utf8');
 roar=roar.replace('<p><a class="back" href="profile.html" target="_top">CONNECT WALLET · EDIT PROFILE</a></p>','');
