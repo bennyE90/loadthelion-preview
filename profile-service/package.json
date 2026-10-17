@@ -13,6 +13,6 @@
     "node": ">=24"
   },
   "scripts": {
-    "test": "node --test auth.test.mjs"
+    "test": "node --test auth.test.mjs wallet-discovery.test.mjs"
   }
 }

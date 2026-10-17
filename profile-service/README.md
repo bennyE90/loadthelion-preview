@@ -21,7 +21,7 @@ The connector requests only personal_sign. Account/network changes invalidate lo
 ## Run tests
 
 Node 24. `npm ci --prefix profile-service` then
-`node --test profile-service/auth.test.mjs`.
+`node --test profile-service/auth.test.mjs profile-service/wallet-discovery.test.mjs`.
 `PROFILE_ORIGIN=https://YOUR-EXACT-SITE-ORIGIN PROFILE_DB=/PRIVATE/PERSISTENT/profiles.sqlite node profile-service/server.mjs`
 
 The service listens on loopback port 8787. Reverse-proxy `/api/profile/*` from the
@@ -34,10 +34,11 @@ The current static GitHub Pages host cannot execute this service.
 1. Select/deploy a backend with persistent storage and an HTTPS same-origin proxy.
    Existing Netlify account is a candidate, but this Node/SQLite process is NOT a
    Netlify Function: adapt to that platform's transactional storage before deployment.
-2. Create a project in https://dashboard.reown.com/ and allowlist the exact site origin.
-   Set its project ID in deployment configuration, never substitute a sample ID.
+2. Reown project LoadTheLion was created on 17 October 2026 on Starter.
+   https://bennye90.github.io is allowlisted. Set the generated Project ID in
+   deployment configuration. Allowlist the final backend/site origin when selected.
 3. Bundle profile-page.mjs (the initial editor and QR canvas are implemented). Finish
-   the wallet picker/deep-link UI and select injected providers explicitly via EIP-6963.
+   the mobile deep-link UI. The EIP-6963 picker now offers injected providers explicitly.
    No automated wallet connection or signature on page load.
 4. Connect leaderboard names/avatars to the public profile endpoint; keep abbreviated
    addresses visible. Score/rank/boost/chances never come from profile fields.
@@ -49,3 +50,9 @@ The current static GitHub Pages host cannot execute this service.
 
 No deployed UI or claim of production readiness is included. Do not publish a
 CONNECT WALLET button that silently stores profiles only in localStorage.
+
+## Observed deployment blocker (17 October 2026)
+
+The existing Netlify team is on operational credits: production deploys and Agent
+Runners are paused. The billing period shown is 16 October–15 November 2026.
+No paid plan was activated. Current GitHub Pages publication remains unchanged.
