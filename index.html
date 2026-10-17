@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LoadTheLion | Test Preview</title>
+<style>
+:root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#3a1326,#0d0c15 65%);color:#f7f2f4;font:16px system-ui,sans-serif}
+header{position:sticky;top:0;background:#130e1beF;border-bottom:4px solid #f03754;padding:16px 20px;z-index:2;backdrop-filter:blur(8px)}
+header strong{font-size:23px;color:#f43c53;letter-spacing:1px}header small{display:block;color:#e9ba7b}
+main{max-width:850px;margin:auto;padding:22px 16px 80px}h1{font-size:clamp(25px,6vw,40px);margin:16px 0}h2{font-size:20px;color:#f0bd78}
+.notice{border:1px solid #ad754b;border-radius:12px;background:#301b25;padding:15px;line-height:1.5}
+.panel{margin-top:22px;border:1px solid #654056;border-radius:14px;overflow:hidden}
+.row{display:grid;grid-template-columns:55px minmax(0,1fr) 100px;gap:8px;align-items:center;padding:15px 12px;border-bottom:1px solid #352633}
+.row:nth-child(even){background:#1c1520}.row.heading{background:#34212c;color:#e5b777;font-weight:800;font-size:13px;letter-spacing:1px}
+.rank,.chance{color:#f2bf77;font-weight:800}.chance{text-align:right}.wallet{font-size:12px;color:#bcb1bc;overflow-wrap:anywhere}.nickname{font-size:14px;font-weight:650}
+button{border:0;background:#efb967;color:#221219;font-weight:800;border-radius:9px;padding:12px 18px;cursor:pointer}
+.status{font-size:14px;color:#cbb8c5;margin:12px 0}footer{font-size:12px;color:#b9a6b2;margin-top:25px}
+</style></head>
+<body><header><strong>LOAD THE LION</strong><small>PUBLIC TEST ENVIRONMENT · NOT THE OFFICIAL WEBSITE</small></header>
+<main><h1>THE TOP 100 ROAR</h1><div class="notice"><b>🧪 ULTCROW TEST ONLY.</b> This preview is isolated from the official $LOAD website. The verified ULTCROW snapshot is historical, not a live ranking. No contest probabilities are published until the adaptive formula is approved.</div>
+<h2>GitHub Pages preview</h2><p>This page confirms the new free preview hosting works on Android. We will bring in the full V124 test build after its files are available, without altering the official site.</p>
+<button id="refresh">Check test data</button><div class="status" id="status">Waiting for test data…</div>
+<div class="panel"><div class="row heading"><span>RANK</span><span>NICKNAME / WALLET</span><span style="text-align:right">CHANCE</span></div><div id="rows"><div class="row"><span>—</span><span>Test data not yet installed</span><span>—</span></div></div></div>
+<footer>Data source: optional static snapshot in this repository. No private GitHub repository or secret is exposed. $LOAD remains unlaunched.</footer></main>
+<script>
+const rows=document.getElementById('rows'),status=document.getElementById('status');
+async function refresh(){
+status.textContent='Checking published test snapshot…';
+try{const r=await fetch('./ultcrow-snapshot.json?t='+Date.now(),{cache:'no-store'});if(!r.ok)throw Error('Snapshot not yet uploaded');const d=await r.json();if(!Array.isArray(d.ranking))throw Error('Unexpected snapshot format');
+rows.replaceChildren();for(const [i,x] of d.ranking.entries()){if(!/^0x[0-9a-fA-F]{40}$/.test(x.address||''))continue;const row=document.createElement('div');row.className='row';const rank=document.createElement('span');rank.className='rank';rank.textContent='#'+String(i+1).padStart(3,'0');const name=document.createElement('div');const nickname=document.createElement('div');nickname.className='nickname';nickname.textContent='Holder '+String(i+1).padStart(3,'0');const wallet=document.createElement('div');wallet.className='wallet';wallet.textContent=x.address.slice(0,7)+'…'+x.address.slice(-5);name.append(nickname,wallet);const chance=document.createElement('span');chance.className='chance';chance.textContent='TBD';row.append(rank,name,chance);rows.append(row)}
+status.textContent='Historical snapshot loaded · '+rows.children.length+' wallets · no live updates';}
+catch(e){status.textContent='No test dataset yet: '+e.message;}}
+document.getElementById('refresh').addEventListener('click',refresh);refresh();
+</script></body></html>
