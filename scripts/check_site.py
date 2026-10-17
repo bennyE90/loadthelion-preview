@@ -3,6 +3,8 @@ from html.parser import HTMLParser
 from pathlib import Path
 from urllib.parse import urlsplit, unquote
 import re
+import hashlib
+import base64
 
 ROOT = Path(__file__).resolve().parents[1] / 'site'
 errors = []
@@ -26,9 +28,19 @@ class Document(HTMLParser):
     def __init__(self, base, source):
         super().__init__(convert_charrefs=True)
         self.base, self.source = base, source
+        self.in_script = False
+        self.script_text = ''
+        self.script_policy = None
 
     def handle_starttag(self, tag, attrs):
         attrs = dict(attrs)
+        if tag == 'meta' and attrs.get('http-equiv', '').lower() == 'content-security-policy':
+            match = re.search(r'(?:^|;)\s*script-src\s+([^;]+)', attrs.get('content', ''))
+            if match:
+                self.script_policy = match.group(1).split()
+        if tag == 'script' and not attrs.get('src'):
+            self.in_script = True
+            self.script_text = ''
         for key in ('src', 'href', 'poster'):
             if attrs.get(key):
                 reference(attrs[key], self.base, self.source)
@@ -36,6 +48,18 @@ class Document(HTMLParser):
             parse(attrs['srcdoc'], self.base, self.source + ' iframe')
         if attrs.get('style'):
             css(attrs['style'], self.base, self.source)
+
+    def handle_data(self, data):
+        if self.in_script:
+            self.script_text += data
+
+    def handle_endtag(self, tag):
+        if tag == 'script' and self.in_script:
+            self.in_script = False
+            if self.script_text.strip() and self.script_policy is not None:
+                digest = base64.b64encode(hashlib.sha256(self.script_text.encode()).digest()).decode()
+                if "'sha256-" + digest + "'" not in self.script_policy:
+                    errors.append(f'{self.source}: inline script blocked by Content Security Policy')
 
 def css(text, base, source):
     for value in re.findall(r'url\(\s*[\"\']?([^\"\')]+)', text):
