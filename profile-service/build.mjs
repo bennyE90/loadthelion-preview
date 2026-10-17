@@ -6,6 +6,7 @@ if(!origin||new URL(origin).origin!==origin||!origin.startsWith('https://'))thro
 await build({entryPoints:['profile-service/browser-entry.mjs'],bundle:true,format:'esm',platform:'browser',target:['es2022'],minify:true,outfile:'site/profile.js',legalComments:'eof'});
 await writeFile('site/profile-config.json',JSON.stringify({projectId,origin}));
 
+await copyFile('profile-service/public/entry.html','site/index.html');
 await copyFile('profile-service/public/profile.html','site/profile.html');
 await copyFile('profile-service/public/profile.css','site/profile.css');
 await copyFile('profile-service/public/settings.html','site/settings.html');

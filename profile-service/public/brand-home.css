@@ -12,3 +12,10 @@ body #home .v74-kicker,body #home .v74-intro,body #home .v74-actions,body #home 
 
 .home-coin-link img{border-radius:50%}
 body #home .hero-legend-link{display:flex;align-items:center;gap:14px;width:max-content;max-width:100%;margin:20px 0 0;color:#efbd68;text-decoration:none;font-family:var(--load-display),Impact,sans-serif;font-size:19px;letter-spacing:.07em;border-bottom:1px solid #bb895b80;padding:9px 0}body #home .hero-legend-link:hover{color:#fff;border-color:#efbd68}body #home .hero-legend-link:focus-visible{outline:3px solid #efbd68;outline-offset:6px}body #home .v74-hero-inner{padding-bottom:28px!important}body #home.v74-penthouse{padding-bottom:4px!important}.home-token-status{padding-bottom:12px!important}.v74-home-content{padding-bottom:0!important;margin-bottom:0!important}body>main#main{padding-bottom:0!important}.home-project-grid{padding-bottom:20px!important}@media(max-width:700px){body #home .v74-hero-inner{padding-bottom:14px!important}body #home .v74-hero-copy{padding-bottom:0!important}.home-token-status{padding-bottom:10px!important}}
+
+/* Chapter III gives the legend its own illustrated atmosphere. */
+body #awakening{background:linear-gradient(180deg,#06071370,#050710dd),url('assets/a641e4dd41a2946115.webp') center top/cover no-repeat!important;background-attachment:fixed!important}
+body #awakening .awakening-heading{background:linear-gradient(135deg,#0a0a188f,#13102055);border:1px solid #d4aa7044;border-radius:18px;padding:clamp(18px,4vw,35px);backdrop-filter:blur(3px)}
+body #home .hero-legend-link{padding:18px 23px;border:1px solid #c797665f;border-radius:12px;background:linear-gradient(90deg,#070912e8,#07091290),url('assets/a641e4dd41a2946115.webp') center 40%/cover no-repeat;min-height:66px;box-shadow:0 8px 24px #0005;color:#f3d7a8}
+body #home .hero-legend-link:hover{border-color:#e1b67d;box-shadow:0 0 22px #a9345833}
+@media(max-width:700px){body #awakening{background-attachment:scroll!important;background-position:60% top!important}body #awakening .awakening-heading{padding:18px 12px}body #home .hero-legend-link{font-size:18px;padding:16px 20px}}
