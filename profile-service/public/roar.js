@@ -1,4 +1,6 @@
-import {BOOST_SECONDS,eventStart,verifySnapshot,movements,formatAmount,formatBoost} from './roar-data.mjs?v=20261017-boost1';
+import {BOOST_SECONDS,eventStart,movements,formatAmount,formatBoost} from './roar-data.mjs?v=20261017-boost1';
+import {createRoarFeed} from './roar-feed.mjs?v=20261017-live1';
+const feed=createRoarFeed();
 const root=document.getElementById('roar-rows'),more=document.getElementById('roar-show-more'),count=document.getElementById('roar-count'),status=document.getElementById('roar-data-status');
 const oddsResponse=await fetch('probabilities.json?v=20261017-chance1');
 if(!oddsResponse.ok)throw Error('Chance table unavailable');
@@ -28,12 +30,15 @@ less.addEventListener('click',()=>{visible=10;show();const first=root.querySelec
 more.addEventListener('click',()=>{visible=Math.min(100,visible+10);show()});render(null,null);
 async function refresh(){
  if(busy)return;busy=true;const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),12000);
- try{const response=await fetch('roar-snapshot.json?t='+Date.now(),{cache:'no-store',signal:controller.signal});if(!response.ok)throw Error('Snapshot unavailable');const payload=await response.json();
-  if(payload.status==='awaiting-data'){if(status)status.textContent=current?'Update unavailable · retaining last verified snapshot':'Waiting for verified snapshots · movement arrows compare with the verified 00:00 UTC leaderboard';return}
-  const next=verifySnapshot(payload);if(current&&(next.snapshotTimestamp<current.snapshotTimestamp||next.snapshotBlock<current.snapshotBlock))throw Error('Older snapshot rejected');
-  if(current&&next.snapshotTimestamp===current.snapshotTimestamp&&next.snapshotBlock===current.snapshotBlock)return;
-  current=next;render(current,payload.dayStartSnapshot);const eligible=document.getElementById('roar-eligible-count');if(eligible)eligible.textContent=String(next.eligibleWallets??next.ranking.length);if(status)status.textContent='ULTON TEST · Verified snapshot · Block '+next.snapshotBlock.toLocaleString('en-US')+' · '+new Date(next.snapshotTimestamp*1000).toISOString().replace('T',' ').replace('.000Z',' UTC');
- }catch(e){if(status)status.textContent=current?'Update unavailable · retaining last verified snapshot':'Verified snapshot unavailable · no points or movement data displayed'}finally{clearTimeout(timer);busy=false}
+ try{
+  const result=await feed.read(controller.signal),next=result.snapshot;
+  if(!next){if(status)status.textContent='Verified snapshot unavailable · no points or movement data displayed';return}
+  if(!current||next.snapshotTimestamp!==current.snapshotTimestamp||next.snapshotBlock!==current.snapshotBlock){current=next;render(current,next.dayStartSnapshot)}
+  const eligible=document.getElementById('roar-eligible-count');if(eligible)eligible.textContent=String(next.eligibleWallets??next.ranking.length);
+  const delayed=Date.now()/1000-next.snapshotTimestamp>1800;
+  const source=result.state==='saved'?'Saved backup':result.state==='retained'?'Update unavailable · last verified snapshot':delayed?'Update delayed · last verified snapshot':'Verified snapshot';
+  if(status)status.textContent='ULTON TEST · '+source+' · Block '+next.snapshotBlock.toLocaleString('en-US')+' · '+new Date(next.snapshotTimestamp*1000).toISOString().replace('T',' ').replace('.000Z',' UTC');
+ }finally{clearTimeout(timer);busy=false}
 }
 refresh();setInterval(()=>{if(!document.hidden)refresh()},300000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh()});
 

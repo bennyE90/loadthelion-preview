@@ -1,12 +1,11 @@
 {
-  "schema": 1,
   "status": "verified",
   "environment": "ULTON_TEST",
   "chainId": 25,
   "token": "0x7ebfd1b08e1d7413d6d8fe6c3eef28945ce776ef",
   "decimals": 18,
-  "snapshotTimestamp": 1792233695,
-  "snapshotBlock": 100466638,
+  "snapshotTimestamp": 1792237284,
+  "snapshotBlock": 100475440,
   "eventStart": 1791763200,
   "complete": true,
   "balancesVerified": true,
@@ -274,15 +273,15 @@
       "rank": 43
     },
     {
-      "address": "0xbf1a1419bc425e2810e07d7be11e704d90a4cb8f",
-      "balanceRaw": "3556300513982306868552050",
-      "boostStartedAt": 1791763200,
-      "rank": 44
-    },
-    {
       "address": "0x124c4afb2fa1f1df47c6d4e5ff3147107fa6f77e",
       "balanceRaw": "7443116258966930439336779",
       "boostStartedAt": 1792145820,
+      "rank": 44
+    },
+    {
+      "address": "0xbf1a1419bc425e2810e07d7be11e704d90a4cb8f",
+      "balanceRaw": "3556300513982306868552050",
+      "boostStartedAt": 1791763200,
       "rank": 45
     },
     {
@@ -328,15 +327,15 @@
       "rank": 52
     },
     {
-      "address": "0x9fd3e7477a657aa47a943ea01bc2d8b4715cf936",
-      "balanceRaw": "6002211262359627687989518",
-      "boostStartedAt": null,
-      "rank": 53
-    },
-    {
       "address": "0x43f158b4d4eed86cb1799973ae49aba9cba0dcf6",
       "balanceRaw": "2124373084129731280359943",
       "boostStartedAt": 1791763200,
+      "rank": 53
+    },
+    {
+      "address": "0x9fd3e7477a657aa47a943ea01bc2d8b4715cf936",
+      "balanceRaw": "6002211262359627687989518",
+      "boostStartedAt": null,
       "rank": 54
     },
     {
@@ -364,21 +363,21 @@
       "rank": 58
     },
     {
-      "address": "0x39dbb80a1a1d1813e208d2fa2663a95cac0fc8f6",
-      "balanceRaw": "4315776749925269782856094",
-      "boostStartedAt": null,
-      "rank": 59
-    },
-    {
       "address": "0x4659c6f11e53dd684d9ad69f59221178e52d2064",
       "balanceRaw": "4087315175854398965691577",
       "boostStartedAt": 1792219697,
-      "rank": 60
+      "rank": 59
     },
     {
       "address": "0xc15b3a6c75b60c042321e3cffc4dd37c3e02a299",
       "balanceRaw": "3057324855733626883239973",
       "boostStartedAt": 1792129160,
+      "rank": 60
+    },
+    {
+      "address": "0x39dbb80a1a1d1813e208d2fa2663a95cac0fc8f6",
+      "balanceRaw": "4315776749925269782856094",
+      "boostStartedAt": null,
       "rank": 61
     },
     {
@@ -1229,7 +1228,7 @@
   },
   "audit": {
     "deploymentBlock": 96210581,
-    "snapshotBlockHash": "0xa9eebf2e593462d8facf2550a18afc4604718b5de0e52725293b4577f85f74c6",
+    "snapshotBlockHash": "0x40e86a36cd0577a408a09feca63ea47fdc02191791ab536ada206360ce9b2ec8",
     "openingBlock": 99358458,
     "dayBlock": 100375146,
     "transfers": 11518,
@@ -1244,5 +1243,9 @@
     "excludedActiveContracts": 11,
     "excludedActiveBurnAddresses": 1,
     "prizesEnabled": false
-  }
+  },
+  "prizesEnabled": false,
+  "rulesHash": "92c7c196c24fdf85727902ec410cb4a440a549220df83196a87b091fdbdf6308",
+  "blockHash": "0x40e86a36cd0577a408a09feca63ea47fdc02191791ab536ada206360ce9b2ec8",
+  "schema": 1
 }
