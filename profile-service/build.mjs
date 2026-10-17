@@ -8,11 +8,22 @@ await writeFile('site/profile-config.json',JSON.stringify({projectId,origin}));
 
 await copyFile('profile-service/public/profile.html','site/profile.html');
 await copyFile('profile-service/public/profile.css','site/profile.css');
+await build({entryPoints:['profile-service/modal-entry.mjs'],bundle:true,format:'esm',platform:'browser',target:['es2022'],minify:true,outfile:'site/wallet-modal.js',legalComments:'eof'});
+const {createHash}=await import('node:crypto');
+const digest=createHash('sha256').update(await readFile('site/wallet-modal.js')).digest('base64');
+const css=await readFile('profile-service/public/modal.css','utf8');
 let home=await readFile('site/home.html','utf8');
-if(!home.includes('class="nav-profile-link"'))home=home.replace('<a href="#faq">FAQ</a></nav>','<a href="#faq">FAQ</a><a class="nav-profile-link" href="profile.html">CONNECT WALLET</a></nav>').replace('</head>','<style>.nav-profile-link{color:#efbd68!important;border:1px solid #a65369;border-radius:8px;padding:7px 9px;font-size:.65rem;white-space:nowrap}@media(min-width:1000px){.nav{gap:clamp(.45rem,1vw,1.1rem)}}</style></head>');
+home=home.replace(/<a class="nav-profile-link"[^>]*>CONNECT WALLET<\/a>/g,'').replace(/<button class="nav-profile-link"[^>]*>CONNECT WALLET<\/button>/g,'');
+home=home.replace('<a href="#faq">FAQ</a></nav>','<a href="#faq">FAQ</a><button class="nav-profile-link" type="button" data-open-wallet aria-haspopup="dialog" aria-controls="wallet-dialog">CONNECT WALLET</button></nav>');
+// Idempotent for repeat local builds; upstream home remains unchanged in Git.
+home=home.replace(/<dialog id="wallet-dialog"[\s\S]*?<\/dialog>/g,'').replace(/<script type="module" src="wallet-modal.js"[^>]*><\/script>/g,'').replace(/<style id="wallet-modal-style">[\s\S]*?<\/style>/g,'');
+home=home.replace("connect-src 'none'","connect-src 'self' https://*.walletconnect.com https://*.walletconnect.org https://*.reown.com wss://*.walletconnect.com wss://*.walletconnect.org");
+home=home.replace("; base-uri",` 'sha256-${digest}'; base-uri`);
+home=home.replace('</head>',`<style id="wallet-modal-style">${css}</style></head>`);
+home=home.replace('</body>',`<dialog id="wallet-dialog" class="ltl-wallet-dialog" aria-label="Connect wallet and edit profile"><div class="wallet-modal-head"><span>LOAD THE LION · CRONOS 25</span><button type="button" data-close-wallet aria-label="Close wallet window">×</button></div><div data-profile-root></div><aside>Profile sign-in only. No transactions or token spending permissions. Your nickname, avatar and wallet address are public.</aside></dialog><script type="module" src="wallet-modal.js" integrity="sha256-${digest}"></script></body>`);
 await writeFile('site/home.html',home);
 let roar=await readFile('site/roar.html','utf8');
-if(!roar.includes('profile.html'))roar=roar.replace('<h2>THE LEADERBOARD</h2>','<p><a class="back" href="profile.html" target="_top">CONNECT WALLET · EDIT PROFILE</a></p><h2>THE LEADERBOARD</h2>');
+roar=roar.replace('<p><a class="back" href="profile.html" target="_top">CONNECT WALLET · EDIT PROFILE</a></p>','');
 await writeFile('site/roar.html',roar);
 const roarScript=await readFile('site/roar.js','utf8');
 if(!roarScript.includes('async function hydrateProfiles()'))await writeFile('site/roar.js',roarScript+'\n'+await readFile('profile-service/leaderboard-profiles.mjs','utf8'));
