@@ -1,5 +1,5 @@
 import {build} from 'esbuild';
-import {writeFile,copyFile,readFile} from 'node:fs/promises';
+import {writeFile,copyFile,readFile,mkdir,readdir} from 'node:fs/promises';
 const projectId=process.env.REOWN_PROJECT_ID,origin=process.env.PROFILE_ORIGIN;
 if(!/^[a-f0-9]{32}$/i.test(projectId||''))throw Error('Configure REOWN_PROJECT_ID before building');
 if(!origin||new URL(origin).origin!==origin||!origin.startsWith('https://'))throw Error('Configure an exact HTTPS PROFILE_ORIGIN');
@@ -8,6 +8,7 @@ await writeFile('site/profile-config.json',JSON.stringify({projectId,origin}));
 
 await copyFile('profile-service/public/profile.html','site/profile.html');
 await copyFile('profile-service/public/profile.css','site/profile.css');
+await mkdir('site/wallet-icons',{recursive:true});for(const name of await readdir('profile-service/public/wallet-icons'))await copyFile('profile-service/public/wallet-icons/'+name,'site/wallet-icons/'+name);
 await build({entryPoints:['profile-service/modal-entry.mjs'],bundle:true,format:'esm',platform:'browser',target:['es2022'],minify:true,outfile:'site/wallet-modal.js',legalComments:'eof'});
 const {createHash}=await import('node:crypto');
 const digest=createHash('sha256').update(await readFile('site/wallet-modal.js')).digest('base64');

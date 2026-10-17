@@ -1,0 +1,2 @@
+Wallet brand icons: @web3icons/core 4.0.58 (npm). https://github.com/0xa3k5/web3icons
+Logos identify third-party wallet providers; respective trademarks remain with their owners. No affiliation is implied.
