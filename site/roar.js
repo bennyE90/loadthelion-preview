@@ -1,14 +1,22 @@
 import {BOOST_SECONDS,eventStart,movements,formatAmount,formatBoost} from './roar-data.mjs?v=20261017-boost1';
 import {createRoarFeed} from './roar-feed.mjs?v=20261017-live1';
+import {snapshotStatus} from './roar-status.mjs?v=20261017-close1';
 const feed=createRoarFeed();
 const root=document.getElementById('roar-rows'),more=document.getElementById('roar-show-more'),count=document.getElementById('roar-count'),status=document.getElementById('roar-data-status');
-const oddsResponse=await fetch('probabilities.json?v=20261017-chance1');
-if(!oddsResponse.ok)throw Error('Chance table unavailable');
-const {probabilitiesPercent:odds}=await oddsResponse.json();
-if(!Array.isArray(odds)||odds.length!==100||odds.some((x,i)=>!Number.isFinite(x)||x<=0||(i&&x>=odds[i-1]))||Math.abs(odds.reduce((a,b)=>a+b,0)-100)>1e-9)throw Error('Invalid chance table');
+let odds=null;
+async function loadOdds(){
+ try{
+  const response=await fetch('probabilities.json?v=20261017-chance1',{signal:AbortSignal.timeout(5000)});
+  if(!response.ok)throw Error('Chance table unavailable');
+  const {probabilitiesPercent:values}=await response.json();
+  if(!Array.isArray(values)||values.length!==100||values.some((x,i)=>!Number.isFinite(x)||x<=0||(i&&x>=values[i-1]))||Math.abs(values.reduce((a,b)=>a+b,0)-100)>1e-9)throw Error('Invalid chance table');
+  odds=values;
+ }catch{/* Missing weights must not prevent the verified ranking or timer from loading. */}
+ render(current,current?.dayStartSnapshot);
+}
 const chanceFormat=new Intl.NumberFormat('en-US',{minimumFractionDigits:2,maximumFractionDigits:4});
 const less=document.getElementById('roar-show-less');
-let visible=10,current=null,busy=false;
+let visible=10,current=null,busy=false,feedState='unavailable';
 function cell(cls,text){const el=document.createElement('span');el.className=cls;el.textContent=text;return el}
 function render(snapshot,baseline){
  const rows=snapshot?.ranking||Array.from({length:100},(_,i)=>({rank:i+1}));
@@ -20,7 +28,7 @@ function render(snapshot,baseline){
   const wallet=cell('roar-name',x.address?'Holder '+String(x.rank).padStart(3,'0'):'Awaiting launch');const hint=cell('roar-address',x.address?x.address.slice(0,6)+'…'+x.address.slice(-4):'Reserved position');if(x.address)wallet.title=x.address;wallet.append(hint);
   const amount=cell('roar-amount',snapshot?formatAmount(x.balanceRaw,snapshot.decimals):'—');
   const boost=cell('roar-boost','');const pct=cell('roar-boost-pct',snapshot?formatBoost(x.boostPercent):'—');const track=document.createElement('div');track.className='roar-boost-track';track.setAttribute('role','progressbar');track.setAttribute('aria-label',snapshot?'ROAR BOOST':'ROAR BOOST waiting for verified data');track.setAttribute('aria-valuemin','0');track.setAttribute('aria-valuemax','200');if(snapshot){track.setAttribute('aria-valuenow',x.boostPercent.toFixed(1));track.setAttribute('aria-valuetext',formatBoost(x.boostPercent))}const fill=document.createElement('i');fill.style.width=(snapshot?x.boostPercent/2:0)+'%';track.append(fill);boost.append(pct,track);
-  const points=cell('roar-points',snapshot?formatAmount(x.pointsNumerator,snapshot.decimals,BigInt(BOOST_SECONDS)):'—');const chance=cell('roar-chance',chanceFormat.format(odds[x.rank-1])+'%');chance.title='Confirmed weighting for rank '+x.rank+' in the full 100-wallet draw; display rounded, original precision preserved';
+  const points=cell('roar-points',snapshot?formatAmount(x.pointsNumerator,snapshot.decimals,BigInt(BOOST_SECONDS)):'—');const chance=cell('roar-chance',odds?chanceFormat.format(odds[x.rank-1])+'%':'—');chance.title=odds?'Confirmed weighting for rank '+x.rank+' in the full 100-wallet draw; display rounded, original precision preserved':'Chance table unavailable · no probability estimated';
   row.append(rank,wallet,amount,boost,points,chance);root.append(row);
  }
  show();
@@ -32,21 +40,25 @@ async function refresh(){
  if(busy)return;busy=true;const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),12000);
  try{
   const result=await feed.read(controller.signal),next=result.snapshot;
-  if(!next){if(status)status.textContent='Verified snapshot unavailable · no points or movement data displayed';return}
+  feedState=result.state;
+  if(!next){updateStatus();return}
   if(!current||next.snapshotTimestamp!==current.snapshotTimestamp||next.snapshotBlock!==current.snapshotBlock){current=next;render(current,next.dayStartSnapshot)}
   const eligible=document.getElementById('roar-eligible-count');if(eligible)eligible.textContent=String(next.eligibleWallets??next.ranking.length);
-  const delayed=Date.now()/1000-next.snapshotTimestamp>1800;
-  const source=result.state==='saved'?'Saved backup':result.state==='retained'?'Update unavailable · last verified snapshot':delayed?'Update delayed · last verified snapshot':'Verified snapshot';
-  if(status)status.textContent='ULTON TEST · '+source+' · Block '+next.snapshotBlock.toLocaleString('en-US')+' · '+new Date(next.snapshotTimestamp*1000).toISOString().replace('T',' ').replace('.000Z',' UTC');
+  updateStatus();
  }finally{clearTimeout(timer);busy=false}
 }
-refresh();setInterval(()=>{if(!document.hidden)refresh()},300000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh()});
+loadOdds();refresh();setInterval(()=>{if(!document.hidden)refresh()},300000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh()});
 
+function updateStatus(){
+ const result=snapshotStatus(current,feedState);
+ if(status){status.textContent=result.text;status.dataset.delayed=String(result.delayed)}
+ return result;
+}
 function updateCountdown(){
  const now=Math.floor(Date.now()/1000),start=current?current.eventStart:eventStart(now),end=start+7*86400;
  let remaining=Math.max(0,end-now);
  for(const [id,seconds] of [['roar-days',86400],['roar-hours',3600],['roar-minutes',60],['roar-seconds',1]]){const el=document.getElementById(id);if(el)el.textContent=String(Math.floor(remaining/seconds)).padStart(2,'0');remaining%=seconds}
- document.getElementById('roar-clock-mode').textContent=current?(now>=end?'EVENT CLOSED':'ULTON TEST · WEEKLY UTC'):'WEEKLY TIMER · TEST';
+ document.getElementById('roar-clock-mode').textContent=updateStatus().mode;
  const close=new Date((end-1)*1000);
  document.getElementById('roar-clock-deadline').textContent='ENDS '+close.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric',timeZone:'UTC'}).toUpperCase()+' · 23:59:59 UTC'+(current?'':' · PRE-LAUNCH PREVIEW');
 }
