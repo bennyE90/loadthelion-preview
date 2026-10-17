@@ -7,7 +7,7 @@ export function createArchiveReader({token,fetcher=fetch,now=()=>Date.now(),ttl=
  async function read(){
   if(typeof token!=='string'||!token)throw Error('Read-only archive connection not configured');
   const headers={Authorization:'Bearer '+token,Accept:'application/vnd.github.raw+json','X-GitHub-Api-Version':'2022-11-28'};
-  async function get(path){const r=await fetcher(API+path,{headers,redirect:'error',signal:AbortSignal.timeout(8000)});if(!r.ok)throw Error('Private archive read unavailable');return r.json()}
+  async function get(path){const r=await fetcher(API+path,{headers,redirect:'error',signal:AbortSignal.timeout(8000)});if(!r.ok){const error=Error('Private archive read unavailable');error.code='ARCHIVE_HTTP_'+r.status;throw error}return r.json()}
   const ref=await get('/git/ref/heads/roar-test-archive'),commit=ref.object?.sha;
   if(!/^[0-9a-f]{40}$/.test(commit||''))throw Error('Invalid archive commit');
   const contents=path=>get('/contents/'+path+'?ref='+commit);

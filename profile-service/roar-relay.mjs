@@ -76,7 +76,7 @@ export function createRoarRelay({store,loadKeys,archiveReader,now=()=>Date.now()
     if(result.modified)return json({status:'published',snapshotBlock:data.snapshotBlock,contentHash});
    }
    return json({error:'Concurrent publication; retry'},409);
-  }catch{return json({error:'Publication unavailable; previous snapshot retained'},503);}
+  }catch{console.warn('Roar archive publication failed');return json({error:'Publication unavailable; previous snapshot retained'},503);}
  }
  return async request=>{
   const path=new URL(request.url).pathname;
@@ -84,7 +84,8 @@ export function createRoarRelay({store,loadKeys,archiveReader,now=()=>Date.now()
    try{
     let row=await read('latest');
     if(archiveReader&&(!row||now()/1000-row.data.publication.publishedAt>=600)){
-     try{const payload=await archiveReader();validatePublishedSnapshot(payload.snapshot,payload.archive,now());await save(payload.snapshot,payload.archive,{run_id:'archive-read',run_attempt:'1'});row=await read('latest')}catch{/* Keep the previous valid snapshot on archive or permission failures. */}
+     let stage='archive-read';
+     try{const payload=await archiveReader();stage='snapshot-validation';validatePublishedSnapshot(payload.snapshot,payload.archive,now());stage='archive-publication';await save(payload.snapshot,payload.archive,{run_id:'archive-read',run_attempt:'1'});row=await read('latest')}catch(error){console.warn('Roar refresh failed',stage,/^ARCHIVE_HTTP_\d{3}$/.test(error?.code||'')?error.code:'UNAVAILABLE');/* Never log credentials, headers, response bodies or arbitrary error messages. */}
     }
     if(!row)return json({status:'awaiting-data'},503,{'Retry-After':'60'});
     const etag='"'+row.data.publication.contentHash+'"',headers={'ETag':etag,'Cache-Control':'public,max-age=15','Netlify-CDN-Cache-Control':'public,s-maxage=30,stale-while-revalidate=30','X-Content-Type-Options':'nosniff'};
