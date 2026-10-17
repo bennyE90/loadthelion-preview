@@ -1,0 +1,7 @@
+node_modules/
+.netlify/
+.env*
+site/profile.js
+site/profile-config.json
+site/profile.html
+site/profile.css

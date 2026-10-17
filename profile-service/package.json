@@ -1,6 +1,8 @@
 {
   "dependencies": {
+    "@netlify/blobs": "11.1.4",
     "@walletconnect/ethereum-provider": "2.26.0",
+    "esbuild": "0.28.2",
     "ethers": "6.17.0",
     "qrcode": "1.5.4",
     "sharp": "0.35.5",
@@ -13,6 +15,6 @@
     "node": ">=24"
   },
   "scripts": {
-    "test": "node --test auth.test.mjs wallet-discovery.test.mjs"
+    "test": "node --test *.test.mjs"
   }
 }

@@ -56,3 +56,27 @@ CONNECT WALLET button that silently stores profiles only in localStorage.
 The existing Netlify team is on operational credits: production deploys and Agent
 Runners are paused. The billing period shown is 16 October–15 November 2026.
 No paid plan was activated. Current GitHub Pages publication remains unchanged.
+
+## Netlify deployment adapter (prepared 17 October 2026)
+
+The Personal plan is now active and automatic recharge is disabled. The deployment
+adapter uses Netlify Blobs with strong reads and ETag conditional writes instead
+of process-local SQLite. Sessions/challenges are in private, site-scoped storage;
+only validated public nickname/avatar fields are exposed by the function. Nightly
+cleanup removes expired session/challenge objects. The function limits requests
+per IP/domain, validates exact Origin on writes, and never enables credentialed CORS.
+
+Netlify build: `npm run build` using Node 24, with `REOWN_PROJECT_ID` and
+`PROFILE_ORIGIN` configured in Netlify. The generated profile page/bundle/config
+and navigation links are added at build time; the existing GitHub Pages build
+is unchanged. The Project ID is public client configuration, not a private key.
+
+Function `profile` serves `/api/profile/*`, with 60 requests/minute per IP/domain.
+Function `profile-cleanup` is scheduled nightly. Native image processing uses sharp.
+Only the verified address controls profile edits. JSON lookup batches up to 100
+public profiles so leaderboard hydration does not create one request per row.
+
+Before activation, inspect the Netlify build log for function bundling and rate-rule
+validation; confirm private project visibility; verify status, rejected Origins,
+wallet cancellation, chain/account change, and a real Crypto.com Onchain sign-in.
+EOA wallets only initially; smart-contract-wallet signatures remain unverified.

@@ -3,9 +3,10 @@ import {EthereumProvider} from '@walletconnect/ethereum-provider';
 export const CRONOS=25;
 export const WALLET_METHODS=Object.freeze(['personal_sign']);
 const account=a=>typeof a==='string'&&/^0x[0-9a-f]{40}$/i.test(a);
-export async function walletConnect({projectId,onUri}){
+export async function walletConnect({projectId,onUri,onProvider}){
  if(!/^[a-f0-9]{32}$/i.test(projectId||''))throw Error('WalletConnect is not configured');
  const provider=await EthereumProvider.init({projectId,chains:[CRONOS],methods:[...WALLET_METHODS],optionalMethods:[],events:['accountsChanged','chainChanged'],optionalEvents:[],showQrModal:false,metadata:{name:'LoadTheLion',description:'Profile sign-in only. No transactions or spending permissions.',url:location.origin,icons:[]}});
+ onProvider?.(provider);
  provider.on('display_uri',onUri);
  await provider.connect();
  return provider;
@@ -30,3 +31,5 @@ export const uploadAvatar=file=>{if(!['image/jpeg','image/png','image/webp'].inc
 export const removeProfile=()=>api('me',{method:'DELETE'});
 export async function disconnect(provider){await api('logout',{method:'POST'});if(provider?.disconnect)await provider.disconnect()}
 export async function watchWallet(provider,onInvalidated){const invalidate=async()=>{try{await api('logout',{method:'POST'})}finally{onInvalidated()}};provider.on?.('accountsChanged',invalidate);provider.on?.('chainChanged',invalidate);provider.on?.('disconnect',invalidate);return ()=>{provider.removeListener?.('accountsChanged',invalidate);provider.removeListener?.('chainChanged',invalidate);provider.removeListener?.('disconnect',invalidate)}}
+
+export const loadProfile=()=>api('me');

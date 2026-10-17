@@ -15,9 +15,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-      - run: npm ci --prefix profile-service
-      - run: node --test profile-service/auth.test.mjs profile-service/wallet-discovery.test.mjs
+      - run: npm ci
+      - run: node --test profile-service/*.test.mjs
       - run: node --check profile-service/server.mjs
       - run: node --check profile-service/wallet-client.mjs
       - run: node --check profile-service/profile-page.mjs
-      - run: npm audit --prefix profile-service --omit=dev --audit-level=high
+      - run: npm audit --omit=dev --audit-level=high
+      - run: npm run build
+        env:
+          REOWN_PROJECT_ID: '00000000000000000000000000000000'
+          PROFILE_ORIGIN: 'https://example.invalid'
+      - run: python3 scripts/check_site.py
