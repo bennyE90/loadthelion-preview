@@ -1,6 +1,7 @@
 const usdIntegerFormat=new Intl.NumberFormat('en-US');
+import {MARKET} from './market-config.mjs';
 export function validatePrice(quote,now=Math.floor(Date.now()/1000)){
- if(!quote||!['ok','stale'].includes(quote.status)||quote.chainId!==25||quote.token!=='0x7ebfd1b08e1d7413d6d8fe6c3eef28945ce776ef'||quote.pair!=='0xa3dc34f3c56157e35bd0e20d8800449dacdda2a5'||quote.currency!=='USD'||quote.source!=='DEX Screener'||!Number.isSafeInteger(quote.observedAt)||quote.observedAt>now+30||now-quote.observedAt>600||typeof quote.priceUsd!=='string'||quote.priceUsd.length>62||!/^\d{1,24}(?:\.\d{1,36})?$/.test(quote.priceUsd)||Number(quote.priceUsd)<=0)throw Error('Invalid or expired USD quote');
+ if(!quote||!['ok','stale'].includes(quote.status)||quote.chainId!==MARKET.chainId||quote.token!==MARKET.token||quote.pair!==MARKET.pair||quote.currency!=='USD'||quote.source!=='DEX Screener'||!Number.isSafeInteger(quote.observedAt)||quote.observedAt>now+30||now-quote.observedAt>600||typeof quote.priceUsd!=='string'||quote.priceUsd.length>62||!/^\d{1,24}(?:\.\d{1,36})?$/.test(quote.priceUsd)||Number(quote.priceUsd)<=0)throw Error('Invalid or expired USD quote');
  return quote;
 }
 // Keep token quantities and the quoted decimal exact until USD-cent rounding.

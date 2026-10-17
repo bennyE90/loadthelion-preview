@@ -54,18 +54,23 @@ test('first-load API outage displays the saved backup explicitly',async()=>{
 
 test('price and holder USD estimates load independently and expire without altering the ranking',async()=>{
  const p=await page(),row=p.nodes.get('roar-rows').children[0];
- assert.equal(p.nodes.get('roar-token-price').textContent,'$0.00012345');
  assert.equal(row.children[2].children[0].textContent,'≈ '+usdValue(snapshot.ranking[0].balanceRaw,snapshot.decimals,'0.00012345'));
  const points=row.children[4].textContent;
  p.advance(601000);
- assert.equal(p.nodes.get('roar-token-price').textContent,'—');
  assert.equal(row.children[2].children[0].textContent,'— USD');
  assert.equal(row.children[4].textContent,points);
 });
 test('price outage leaves token quantities, scores and pagination available',async()=>{
  const p=await page({priceFailure:true});
- assert.equal(p.nodes.get('roar-token-price').textContent,'—');
  assert.match(p.nodes.get('roar-price-status').textContent,/Price unavailable/);
  assert.equal(p.nodes.get('roar-rows').children.length,100);
  assert.notEqual(p.nodes.get('roar-rows').children[0].children[4].textContent,'—');
+});
+
+test('Roar keeps holder USD estimates but moves the market panel and duplicate explanations out',()=>{
+ const html=readFileSync(new URL('./public/roar.html',import.meta.url),'utf8');
+ assert(!html.includes('id="roar-token-price"'));
+ assert(!html.includes('class="stats"'));
+ assert(html.includes('home.html#load-dashboard'));
+ assert(html.includes('id="roar-price-status"'));
 });

@@ -4,6 +4,12 @@ import {createPriceService,parseMarketQuote,PRICE_TOKEN,PRICE_POOL,PRICE_URL} fr
 import {validatePrice,usdValue} from '../site/roar-usd.mjs';
 const data=()=>({pairs:[{chainId:'cronos',pairAddress:PRICE_POOL,baseToken:{address:PRICE_TOKEN},priceUsd:'0.00012345'}]});
 const request=()=>new Request('https://example.invalid/api/roar/price');
+test('market metrics preserve missing fields and distinguish market cap from FDV',()=>{
+ const input=data();Object.assign(input.pairs[0],{marketCap:123,fdv:456,liquidity:{usd:789},volume:{h24:10},priceChange:{h24:-2.5},txns:{h24:{buys:4,sells:8}}});
+ const q=parseMarketQuote(input,100);assert.equal(q.marketCapUsd,123);assert.equal(q.fdvUsd,456);assert.equal(q.change24h,-2.5);assert.equal(q.buys24h,4);
+ const absent=parseMarketQuote(data(),100);assert.equal(absent.marketCapUsd,null);assert.equal(absent.liquidityUsd,null);
+ Object.assign(input.pairs[0],{marketCap:-1,fdv:Infinity,txns:{h24:{buys:1.5,sells:-1}}});const invalid=parseMarketQuote(input,100);assert.equal(invalid.marketCapUsd,null);assert.equal(invalid.fdvUsd,null);assert.equal(invalid.buys24h,null);
+});
 test('quotes are bound to the exact Cronos pool and base token',()=>{
  assert.equal(parseMarketQuote(data(),100).priceUsd,'0.00012345');
  for(const change of [{chainId:'ethereum'},{pairAddress:PRICE_TOKEN},{baseToken:{address:PRICE_POOL}},{priceUsd:'0'},{priceUsd:'NaN'},{priceUsd:'-1'},{priceUsd:null}])assert.throws(()=>parseMarketQuote({pairs:[{...data().pairs[0],...change}]},100));

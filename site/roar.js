@@ -86,10 +86,9 @@ async function hydrateProfiles(){
 if(profileRoot){hydrateProfiles();new MutationObserver(hydrateProfiles).observe(profileRoot,{childList:true})}
 
 function updateMarket(){
- const price=document.getElementById('roar-token-price'),info=document.getElementById('roar-price-status');
+ const info=document.getElementById('roar-price-status');
  let valid=null;try{valid=validatePrice(marketQuote)}catch{/* Expired prices are hidden, never converted to zero. */}
- if(price)price.textContent=valid?'$'+valid.priceUsd:'—';
- if(info)info.textContent=valid?((priceFailed||valid.status==='stale'?'Last available quote':'DEX Screener quote')+' · checked '+new Date(valid.observedAt*1000).toISOString().slice(11,19)+' UTC · '+Math.max(0,Math.floor(Date.now()/1000)-valid.observedAt)+'s ago'):'Price unavailable · USD estimates paused';
+ if(info)info.textContent=valid?((priceFailed||valid.status==='stale'?'USD estimates · last available quote':'USD estimates')+' · checked '+new Date(valid.observedAt*1000).toISOString().slice(11,19)+' UTC · '+Math.max(0,Math.floor(Date.now()/1000)-valid.observedAt)+'s ago'):'Price unavailable · USD estimates paused';
  const key=String(current?.snapshotBlock)+':'+(valid?.priceUsd||'unavailable');
  if(key!==valuationKey){for(const el of root.querySelectorAll('.roar-usd'))el.textContent=valid&&current?('≈ '+usdValue(el.dataset.balanceRaw,current.decimals,valid.priceUsd)):'— USD';valuationKey=key}
 }
