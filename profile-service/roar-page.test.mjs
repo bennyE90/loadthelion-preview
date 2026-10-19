@@ -134,7 +134,7 @@ test('live preview renders maximum boost, matching points/rank, the simulated de
  assert.equal(p.nodes.get('roar-pool-percent').textContent,'91.66/100%');assert.equal(p.nodes.get('roar-pool-fill').style.width,'91.66%');assert.equal(p.nodes.get('roar-pool-meter').attributes['aria-valuenow'],'91.66');
  assert.match(p.nodes.get('roar-clock-deadline').textContent,/19 OCT 2026/);assert.equal(p.nodes.get('roar-clock-mode').textContent,'ULTON TEST · SIMULATED EVENT');
  assert.match(p.nodes.get('roar-legend').textContent,/Everyone starts at 0%/);
- const html=readFileSync(new URL('./public/roar.html',import.meta.url),'utf8');assert.match(html,/roar-page-title">TOP 100 <em>ROAR/);assert(!html.includes('id="roar-pool-total"'));assert(!html.includes('id="roar-pool-remaining"'));assert(!html.includes('id="roar-pool-emitted"'));
+ const html=readFileSync(new URL('./public/roar.html',import.meta.url),'utf8');assert.match(html,/<h1 class="roar-sr-only">THE TOP 100 ROAR/);assert(!html.includes('id="roar-pool-total"'));assert(!html.includes('id="roar-pool-remaining"'));assert(!html.includes('id="roar-pool-emitted"'));
 });
 
 test('PFP occupies its own column and loads the profile Settings avatar with a safe fallback',async()=>{
