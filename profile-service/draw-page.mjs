@@ -38,7 +38,7 @@ async function loadViewer(){
  try{const r=await fetch('/api/profile/me',{credentials:'same-origin',cache:'no-store',signal:AbortSignal.timeout(3500)});if(!r.ok)return null;const p=await r.json();if(!/^0x[0-9a-f]{40}$/i.test(p.address||''))return null;const link=$('draw-viewer-link');link.textContent=typeof p.nickname==='string'&&p.nickname.trim()?p.nickname.trim():short(p.address);link.href='settings.html';return p.address.toLowerCase()}catch{return null}
 }
 async function loadPrize(eventId){try{const response=await fetch('/draw-prize.json',{cache:'no-store',signal:AbortSignal.timeout(3500)});return response.ok?publishedPrize(await response.json(),eventId):null}catch{return null}}
-function prize(prefix){const src=prizeUrl||sharedPrize?.image;$(prefix+'-prize').hidden=!src;if(src){$(prefix+'-prize-image').src=src;if(prefix==='draw')$('draw-prize-caption').textContent=prizeUrl?'ANTEPRIMA IMMAGINE · SOLO QUESTA SCHEDA':sharedPrize.name+' · TEST'}if(prefix==='draw')$('draw-prize-empty').hidden=!!src;else $('preview-prize-empty').hidden=!!src}
+function prize(prefix){const src=prizeUrl||sharedPrize?.image;$(prefix+'-prize').hidden=!src;if(src){$(prefix+'-prize-image').src=src;if(prefix==='draw')$('draw-prize-caption').textContent=prizeUrl?'IMAGE PREVIEW · THIS TAB ONLY':sharedPrize.name+' · TEST'}if(prefix==='draw')$('draw-prize-empty').hidden=!!src;else $('preview-prize-empty').hidden=!!src}
 function clearResult(){clearTimeout(celebrationTimer);$('draw-celebration').replaceChildren();$('draw-result').hidden=true;document.querySelector('.reveal-stage').classList.remove('personal-win','winner-locked')}
 function celebrate(reduced){
  if(reduced)return;const layer=$('draw-celebration');
@@ -46,17 +46,17 @@ function celebrate(reduced){
  celebrationTimer=setTimeout(()=>layer.replaceChildren(),3400);
 }
 function showWinner(reduced){
- $('draw-result-symbol').textContent='★';$('draw-result-title').textContent=winnerMessage(names[verified.rank-1]);$('draw-result-message').textContent='VINCITORE #'+String(verified.rank).padStart(3,'0')+' · TEST';$('draw-result').dataset.outcome='winner';$('draw-result').hidden=false;
+ $('draw-result-symbol').textContent='★';$('draw-result-title').textContent=winnerMessage(names[verified.rank-1]);$('draw-result-message').textContent='WINNER #'+String(verified.rank).padStart(3,'0')+' · TEST';$('draw-result').dataset.outcome='winner';$('draw-result').hidden=false;
  document.querySelector('.reveal-stage').classList.add('personal-win');prize('draw');celebrate(reduced);audio.finish();
 }
 async function play(){
  if(!verified||playing||previewing)return;playing=true;$('draw-play').disabled=true;clearResult();document.querySelector('.reveal-stage').classList.remove('finished');for(const card of [...cards,...atlas])card.classList.remove('winner','active');active=-1;theater(true);
- const music=audio.start();
+ const music=audio.start();let winnerConfirmed=false;
  $('draw-kicker').textContent='THE PRIDE IS WATCHING';$('draw-title').textContent='LET THE ROAR BEGIN';$('draw-wallet').textContent='';$('draw-state').textContent='The reveal is in motion';
  const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches,duration=reduced?3000:REVEAL_DURATION;
  try{
   const audioReady=await music;$('draw-sound').dataset.ready=String(audioReady);
-  await new Promise(resolve=>{let start;function frame(now){if(start===undefined)start=now;const view=revealFrame(now-start,duration,verified.rank,parseInt(evidence.draw.randomness.slice(0,8),16));audio.update(view.progress);$('draw-kicker').textContent=view.locked?'WINNER LOCKED · #'+String(verified.rank).padStart(3,'0'):view.phase;if(view.locked){document.querySelector('.reveal-stage').classList.add('winner-locked');$('draw-state').textContent='VINCITORE #'+String(verified.rank).padStart(3,'0')+' · CONFERMATO'}if(view.done){resolve();return}if(!reduced&&view.index!==active){highlight(view.index,view.locked);audio.tick(view.index);$('draw-title').textContent=names[view.index];$('draw-wallet').textContent=short(evidence.final.ranking[view.index].address)}requestAnimationFrame(frame)}requestAnimationFrame(frame)});
+  await new Promise(resolve=>{let start;function frame(now){if(start===undefined)start=now;const view=revealFrame(now-start,duration,verified.rank,parseInt(evidence.draw.randomness.slice(0,8),16));audio.update(view.progress);$('draw-kicker').textContent=view.confirmed?'WINNER LOCKED · #'+String(verified.rank).padStart(3,'0'):view.phase;if(view.confirmed){document.querySelector('.reveal-stage').classList.add('winner-locked');$('draw-state').textContent='WINNER #'+String(verified.rank).padStart(3,'0')+' · CONFIRMED'}if(view.done){resolve();return}if(!reduced&&(view.index!==active||view.confirmed&&!winnerConfirmed)){highlight(view.index,view.confirmed);audio.tick(view.index);$('draw-title').textContent=names[view.index];$('draw-wallet').textContent=short(evidence.final.ranking[view.index].address)}winnerConfirmed=view.confirmed;requestAnimationFrame(frame)}requestAnimationFrame(frame)});
   await visible();const row=evidence.final.ranking[verified.rank-1],name=names[verified.rank-1];highlight(verified.rank-1,true);
   $('draw-kicker').textContent='THE WINNER · #'+String(verified.rank).padStart(3,'0');$('draw-title').textContent=name;$('draw-wallet').textContent=row.address;$('draw-state').textContent='FINAL RANK #'+String(verified.rank).padStart(3,'0')+' · '+percent(evidence.probabilitiesPercent[verified.rank-1]);
   theater(false);document.querySelector('.reveal-stage').classList.add('finished');showWinner(reduced);$('draw-play').textContent='WATCH AGAIN';
@@ -72,11 +72,11 @@ async function preview(){
  if(playing||previewing)return;previewing=true;const serial=++previewSerial;previewFocus=document.activeElement;
  const ready=audio.start();$('draw-preview').hidden=false;$('draw-preview').dataset.outcome='winner';
  $('preview-title').textContent=winnerMessage('THE LUCKY LION');
- $('preview-message').textContent='Un solo vincitore. Un unico grande ruggito per tutta la Pride.';
+ $('preview-message').textContent='One winner. One mighty roar for the entire Pride.';
  prize('preview');
  $('preview-close').focus();await ready;if(!previewing||serial!==previewSerial)return;celebrate(matchMedia('(prefers-reduced-motion: reduce)').matches);audio.finish();
 }
 function closePreview(){if(!previewing)return;previewing=false;previewSerial++;audio.stop();clearTimeout(celebrationTimer);$('draw-celebration').replaceChildren();$('draw-preview').hidden=true;previewFocus?.focus()}
 $('preview-win').addEventListener('click',preview);$('preview-close').addEventListener('click',closePreview);
 document.addEventListener('keydown',event=>{if(event.key==='Escape'){closePreview();theater(false)}if(event.key==='Tab'&&previewing){event.preventDefault();$('preview-close').focus()}});
-$('prize-upload').addEventListener('change',()=>{const file=$('prize-upload').files?.[0];if(!file)return;if(!['image/png','image/jpeg','image/webp'].includes(file.type)||file.size>8*1024*1024){$('prize-upload-status').textContent='Scegli un JPG, PNG o WebP entro 8 MB.';return}const image=new Image(),url=URL.createObjectURL(file);image.onload=()=>{if(prizeUrl)URL.revokeObjectURL(prizeUrl);prizeUrl=url;$('prize-upload-status').textContent='Loaded Lion pronto per l’anteprima · solo in questa scheda';if($('draw-result').dataset.outcome==='winner')prize('draw')};image.onerror=()=>{URL.revokeObjectURL(url);$('prize-upload-status').textContent='Immagine non leggibile: scegli un altro file.'};image.src=url});
+$('prize-upload').addEventListener('change',()=>{const file=$('prize-upload').files?.[0];if(!file)return;if(!['image/png','image/jpeg','image/webp'].includes(file.type)||file.size>8*1024*1024){$('prize-upload-status').textContent='Choose a JPG, PNG or WebP up to 8 MB.';return}const image=new Image(),url=URL.createObjectURL(file);image.onload=()=>{if(prizeUrl)URL.revokeObjectURL(prizeUrl);prizeUrl=url;$('prize-upload-status').textContent='Loaded Lion ready to preview · this tab only';if($('draw-result').dataset.outcome==='winner')prize('draw')};image.onerror=()=>{URL.revokeObjectURL(url);$('prize-upload-status').textContent='Unable to read this image. Please choose another file.'};image.src=url});

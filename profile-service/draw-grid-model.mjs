@@ -6,7 +6,7 @@ export function revealFrame(elapsed,duration,winnerRank=1,seed=0){
  // Cosmetic laps only: entropy determines their count; the verified rank fixes the stop.
  const travel=Math.min(1,progress/.96);
  const step=Math.min(total,Math.round(total*(1-(1-travel)**2))),locked=step===total;
- return {progress,done:progress===1,index:step%100,step,laps,locked,phase:progress<.7?'THE PRIDE · 01 → 100 → 01':progress<.92?'FEEL THE TENSION':'ONE FINAL ROAR'};
+ return {progress,done:progress===1,index:step%100,step,laps,locked,confirmed:locked&&progress>=.985,phase:progress<.7?'THE PRIDE · 01 → 100 → 01':progress<.92?'FEEL THE TENSION':'ONE FINAL ROAR'};
 }
 export function winnerMessage(name){return 'ROOOOAR, '+name+', YOU WON!!! 🎉🎉🎉'}
 export function chainReceiptUrl(receipt){return receipt?.status==='CONFIRMED'&&receipt.chainId===25&&/^0x[0-9a-fA-F]{64}$/.test(receipt.transactionHash||'')?'https://explorer.cronos.org/tx/'+receipt.transactionHash:null}

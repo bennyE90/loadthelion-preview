@@ -36,3 +36,10 @@ test('winner holds visibly before celebration; the preceding rank cannot look li
   let previousHold=0;for(let at=40000;at<45000;at+=16){const f=revealFrame(at,45000,rank,seed);if(f.step===hold.step-1)previousHold+=16}assert(previousHold<1300);
  }
 });
+
+test('the final tile pauses normally before its delayed winner illumination',()=>{
+ for(let rank=1;rank<=100;rank++)for(const seed of [0,1,2]){
+  const suspense=revealFrame(43000,45000,rank,seed);assert.equal(suspense.locked,true);assert.equal(suspense.confirmed,false);assert.equal(suspense.index,rank-1);
+  assert.equal(revealFrame(44000,45000,rank,seed).confirmed,false);assert.equal(revealFrame(44400,45000,rank,seed).confirmed,true);assert.equal(revealFrame(45000,45000,rank,seed).confirmed,true);
+ }
+});

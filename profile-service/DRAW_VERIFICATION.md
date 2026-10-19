@@ -49,7 +49,9 @@ commitment exists.
 The 45-second presentation makes 3–5 ascending laps through ranks 1–100,
 wrapping 100 back to 1. A beacon-derived cosmetic lap count varies the travel;
 the last partial lap decelerates to the exact verified winner and holds it
-for at least two seconds before the upper-spotlight celebration. It
+for at least two seconds before the upper-spotlight celebration. The final
+tile keeps normal candidate styling during the suspense pause; confirmation
+colour and the winner label appear only in the last 1.5% of playback. It
 never chooses or changes the verified winner. Every viewer gets the same winner
 celebration; there is no loser screen or viewer-dependent result.
 
