@@ -38,7 +38,7 @@ function render(snapshot,baseline){
   const usd=cell('roar-usd','— USD');usd.dataset.balanceRaw=x.balanceRaw||'';amount.append(usd);
   const boost=cell('roar-boost','');const pct=cell('roar-boost-pct',snapshot?formatBoost(x.boostPercent):'—');const track=document.createElement('div');track.className='roar-boost-track';track.setAttribute('role','progressbar');track.setAttribute('aria-label',snapshot?'ROAR BOOST':'ROAR BOOST waiting for verified data');track.setAttribute('aria-valuemin','0');track.setAttribute('aria-valuemax',String(x.boostMaxPercent||250));if(snapshot){track.setAttribute('aria-valuenow',x.boostPercent.toFixed(2));track.setAttribute('aria-valuetext',formatBoost(x.boostPercent))}const fill=document.createElement('i');fill.style.width=(snapshot?100*x.boostPercent/x.boostMaxPercent:0)+'%';track.append(fill);boost.append(pct,track);
   const points=cell('roar-points',snapshot?formatAmount(x.pointsNumerator,snapshot.decimals,BigInt(x.pointsDenominator)):'—');const chance=cell('roar-chance',odds?chanceFormat.format(odds[x.rank-1])+'%':'—');chance.title=odds?'Confirmed weighting for rank '+x.rank+' in the full 100-wallet draw; display rounded, original precision preserved':'Chance table unavailable · no probability estimated';
-  const rewards=cell('roar-reward','');const rewardAmount=cell('roar-reward-amount','—'),rewardUsd=cell('roar-reward-usd','— USD'),rewardLabel=cell('roar-reward-label','ESTIMATE · LOCKED');rewards.append(rewardAmount,rewardUsd,rewardLabel);rewardCells.push({rank:x.rank,address:x.address,amount:rewardAmount,usd:rewardUsd,label:rewardLabel});
+  const rewards=cell('roar-reward','');rewards.title='Estimated share for this rank. The final snapshot sets the wallet reward; this is not personal accrual.';const rewardAmount=cell('roar-reward-amount','—'),rewardUsd=cell('roar-reward-usd','— USD'),rewardLabel=cell('roar-reward-label','ESTIMATED SHARE');rewards.append(rewardAmount,rewardUsd,rewardLabel);rewardCells.push({rank:x.rank,address:x.address,amount:rewardAmount,usd:rewardUsd,label:rewardLabel});
   row.append(rank,pfp,wallet,amount,boost,points,chance,rewards);root.append(row);
  }
  show();valuationKey='';updateMarket();updateRewards();hydrateProfiles();
@@ -137,7 +137,7 @@ function updateRewards(){
  const confirmed=!state.preview&&finalReward?.eventStart===start;
  const remainingSeconds=Math.max(0,state.end-Math.floor(Date.now()/1000));
  set('roar-pool-timeline',state.preview?'10–19 OCT 2026 · UTC':'EVENT REWARDS · UTC');
- set('roar-pool-status',!supported?'Waiting for verified ULTON event data':confirmed?'FINAL ALLOCATION VERIFIED · TEST ONLY':state.closed?(state.preview?'SIMULATION COMPLETE · NO CLAIMS':'EVENT CLOSED · FINAL SNAPSHOT PENDING'):'LIVE ESTIMATES · CLAIMS LOCKED UNTIL EVENT END');
+ set('roar-pool-status',!supported?'Waiting for verified ULTON event data':confirmed?'FINAL ALLOCATION VERIFIED · TEST ONLY':state.closed?(state.preview?'SIMULATION COMPLETE · NO CLAIMS':'EVENT CLOSED · FINAL SNAPSHOT PENDING'):'RANK ESTIMATES · LOCKED');
  set('roar-pool-caption',state.preview?'Rewards unlock only after event closing and final snapshot verification. Live amounts remain estimates.':state.closed?'The simulated pool is fully released. Only the verified final Top 100 fixes each allocation.':'Released evenly over this event. Estimates follow the current rank and may change.');
  let amounts=null;
  if(supported&&odds&&current.ranking.length===100)try{amounts=allocateRewards(confirmed?state.total:state.emitted,odds)}catch{}
@@ -145,7 +145,7 @@ function updateRewards(){
   const pending=state.closed&&!confirmed,raw=amounts?.[el.rank-1];
   el.amount.textContent=raw===undefined||pending?'—':formatAmount(String(raw),18)+' ULTON';
   el.usd.textContent=raw===undefined||pending?'— USD':dollars(raw);
-  el.label.textContent=pending?(state.preview?'PREVIEW COMPLETE':'FINAL SNAPSHOT PENDING'):confirmed?'FINAL · TEST ALLOCATION':'ESTIMATE · LOCKED';
+  el.label.textContent=pending?(state.preview?'PREVIEW COMPLETE':'FINAL SNAPSHOT PENDING'):confirmed?'FINAL · TEST ALLOCATION':'ESTIMATED SHARE';
  }
  const now=Math.floor(Date.now()/1000);
  if(current&&!state.preview&&state.closed&&!confirmed&&!rewardBusy&&(!refreshFinalRewards.lastAttempt||now-refreshFinalRewards.lastAttempt>=60))refreshFinalRewards();

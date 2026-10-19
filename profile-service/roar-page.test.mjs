@@ -104,7 +104,7 @@ test('live rewards release alongside chance and remain pending at deadline, with
  const p=await page({nowOverride:1792454400000-1000,dataOverride:{...snapshot,eventStart:start,eventEnd:eventEnd(start),snapshotTimestamp:start+3600,ranking,dayStartSnapshot:undefined}}),row=p.nodes.get('roar-rows').children[0];p.advance(0);
  assert.equal(row.children.length,8);assert.equal(row.children[6].textContent,'5.00%');
  assert.match(row.children[7].children[0].textContent,/ULTON/);assert.match(row.children[7].children[1].textContent,/≈ \$/);
- assert.equal(row.children[7].children[2].textContent,'ESTIMATE · LOCKED');
+ assert.equal(row.children[7].children[2].textContent,'ESTIMATED SHARE');
  assert.match(p.nodes.get('roar-pool-percent').textContent,/99.99\/100%/);
  p.advance(1000);assert.equal(p.nodes.get('roar-pool-percent').textContent,'100.00/100%');
  assert.equal(row.children[7].children[0].textContent,'—');assert.equal(row.children[7].children[2].textContent,'PREVIEW COMPLETE');
