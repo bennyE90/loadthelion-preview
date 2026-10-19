@@ -30,7 +30,7 @@ function render(snapshot,baseline){
  const changes=snapshot&&!simulated?movements(snapshot,baseline):new Map();root.replaceChildren();rewardCells=[];
  for(const x of rows){
   const row=document.createElement('div');row.className='rank-row'+(x.rank<=10?' top-ten':'')+(x.rank<=3?' top-three':'');
-  const rank=cell('rank '+(x.rank===1?'gold':x.rank===2?'silver':x.rank===3?'bronze':'red'),'#'+String(x.rank).padStart(3,'0'));
+  const rank=cell('rank '+(x.rank===1?'gold':x.rank===2?'silver':x.rank===3?'bronze':'red'),String(x.rank));
   const change=changes.get(x.address);const move=cell('roar-movement '+(change?.type||'unknown'),change?.text||'—');move.setAttribute('aria-label',change?.label||'No verified 00:00 UTC baseline');rank.append(move);
   const pfp=cell('roar-pfp','');pfp.setAttribute('role','img');pfp.setAttribute('aria-label','Profile picture not set');const placeholder=cell('roar-pfp-placeholder','');placeholder.setAttribute('aria-hidden','true');pfp.append(placeholder);
   const wallet=cell('roar-name',x.address?'Holder '+String(x.rank).padStart(3,'0'):'Awaiting launch');const hint=cell('roar-address',x.address?x.address.slice(0,6)+'…'+x.address.slice(-4):'Reserved position');if(x.address)wallet.title=x.address;const nickname=cell('roar-nickname',wallet.textContent);wallet.textContent='';wallet.append(nickname,hint);
