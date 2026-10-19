@@ -43,3 +43,17 @@ The final participant list is computed by the existing indexer. Cryptographic
 proofs of entropy do not independently prove holder eligibility. Git archive
 administration remains a trust assumption until a timely independent chain
 commitment exists.
+
+## Shared celebration and prize image
+
+The 45-second presentation makes one ascending pass through ranks 1–100. It
+never chooses or changes the verified winner. Every viewer gets the same winner
+celebration; there is no loser screen or viewer-dependent result.
+
+`site/draw-prize.json` supplies a common prize image only when its `eventId`
+matches the verified draw plan. Add the actual approved NFT asset under
+`site/assets/` and set that exact event and image path together. An unset or
+mismatched configuration displays an unconfirmed-prize placeholder. It does not
+imply ownership, transfer, or enable real prizes in this test. Creator Studio
+file selection remains a clearly labelled tab-local preview, never a shared
+prize publication.
