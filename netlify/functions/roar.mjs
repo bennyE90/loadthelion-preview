@@ -3,11 +3,14 @@ import {createRoarRelay,strictBlobFetch} from '../../profile-service/roar-relay.
 import {createArchiveReader} from '../../profile-service/roar-archive-reader.mjs';
 import {createPriceService} from '../../profile-service/roar-price.mjs';
 import {createDrawService} from '../../profile-service/roar-draw-service.mjs';
+import {createRewardsService} from '../../profile-service/roar-rewards-service.mjs';
 const priceService=createPriceService();
 const readToken=process.env.ROAR_ARCHIVE_READ_TOKEN;
 const drawService=createDrawService({token:readToken});
+const rewardsService=createRewardsService({token:readToken});
 const archiveReader=readToken?createArchiveReader({token:readToken}):undefined;
 export default async function(request){
+ if(new URL(request.url).pathname==='/api/roar/rewards')return rewardsService(request);
  if(new URL(request.url).pathname==='/api/roar/draw')return drawService(request);
  if(new URL(request.url).pathname==='/api/roar/price')return priceService(request);
  const store=getStore({name:'loadthelion-ulton-roar-test-v1',consistency:'strong',fetch:strictBlobFetch});
