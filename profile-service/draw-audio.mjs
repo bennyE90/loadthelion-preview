@@ -13,7 +13,7 @@ export function createDrawAudio({AudioContext=globalThis.AudioContext||globalThi
   async start(){
    halt();if(!AudioContext)return false;
    try{if(!ctx){ctx=new AudioContext();master=ctx.createGain();const compressor=ctx.createDynamicsCompressor();compressor.threshold.value=-18;compressor.ratio.value=4;master.connect(compressor);compressor.connect(ctx.destination)}await ctx.resume();level();music=ctx.createGain();music.gain.value=.75;music.connect(master);run=true;progress=0;nextBeat=ctx.currentTime+.025;beat=0;
-    riser=oscillator(92,ctx.currentTime,30,.025,'triangle',music);return true;
+    riser=oscillator(92,ctx.currentTime,60,.025,'triangle',music);return true;
    }catch{run=false;return false}
   },
   update(value){
@@ -37,6 +37,7 @@ export function createDrawAudio({AudioContext=globalThis.AudioContext||globalThi
     [329.63,293.66,246.94,196].forEach((f,i)=>oscillator(f,t+i*.2,.38,.13,'sine'));
     [196,246.94].forEach(f=>oscillator(f,t+.8,.85,.04,'triangle'));
    }else if(outcome==='winner'||outcome==='spectator'){
+    if(outcome==='winner'){const roar=oscillator(130,t,1.7,.18,'triangle');roar.frequency.exponentialRampToValueAtTime(38,t+1.6);[587.33,739.99,880].forEach((f,i)=>oscillator(f,t+.9+i*.16,1.2,.065,'sine'))}
     [293.66,369.99,440].forEach(f=>oscillator(f,t,.75,outcome==='winner'?.11:.075,'triangle'));
     [587.33,739.99,880,1174.66].forEach((f,i)=>oscillator(f,t+.14+i*.14,.45,.1,'sine'));
     oscillator(73.42,t,1,.17,'sine');[0,.28,.56].forEach(d=>oscillator(130,t+d,.1,.18,'sine'));
