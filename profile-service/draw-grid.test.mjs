@@ -11,7 +11,7 @@ test('repeated ascending laps wrap 100 to 1 and decelerate to every verified win
  for(let rank=1;rank<=100;rank++)for(const seed of [0,1,2,100]){
   let last=-1;const seen=[];
   for(let at=0;at<45000;at+=16){const f=revealFrame(at,45000,rank,seed);assert.equal(f.done,false);if(f.step!==last){if(last>=0)assert.equal(f.step,last+1);last=f.step;seen.push(f.index)}}
-  const final=revealFrame(45000,45000,rank,seed);assert.equal(final.index,rank-1);assert.equal(final.done,true);assert.equal(final.step,last+1);assert(seen.length>=300);assert.equal(seen[99],99);assert.equal(seen[100],0);
+  const final=revealFrame(45000,45000,rank,seed);assert.equal(final.index,rank-1);assert.equal(final.done,true);assert.equal(final.step,last);assert(seen.length>=300);assert.equal(seen[99],99);assert.equal(seen[100],0);
   assert(revealFrame(1000,45000,rank,seed).step>final.step-revealFrame(44000,45000,rank,seed).step);
  }
  assert.notEqual(revealFrame(10000,45000,12,0).laps,revealFrame(10000,45000,12,1).laps);
@@ -27,4 +27,12 @@ test('a shared prize must match the exact event and a local image asset',()=>{
  assert.equal(publishedPrize({eventId:'old',image:'assets/prize.webp'},'new'),null);
  for(const image of [null,'https://evil.test/nft.png','assets/../x.png','javascript:bad'])assert.equal(publishedPrize({eventId:'week',image},'week'),null);
  assert.deepEqual(publishedPrize({eventId:'week',image:'assets/lion-42.webp',name:'Loaded Lion #42'},'week'),{image:'assets/lion-42.webp',name:'Loaded Lion #42'});
+});
+
+test('winner holds visibly before celebration; the preceding rank cannot look like the final stop',()=>{
+ for(let rank=1;rank<=100;rank++)for(const seed of [0,1,2]){
+  const hold=revealFrame(43000,45000,rank,seed);assert.equal(hold.locked,true);assert.equal(hold.index,rank-1);assert.equal(hold.done,false);
+  const tail=revealFrame(44999,45000,rank,seed);assert.equal(tail.index,rank-1);assert.equal(tail.locked,true);
+  let previousHold=0;for(let at=40000;at<45000;at+=16){const f=revealFrame(at,45000,rank,seed);if(f.step===hold.step-1)previousHold+=16}assert(previousHold<1300);
+ }
 });
