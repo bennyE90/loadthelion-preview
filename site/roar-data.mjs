@@ -1,17 +1,18 @@
+import {eventStart,eventEnd,eventScore} from './roar-calendar.mjs';
+export {eventStart,eventEnd,rulesForStart,ACTIVATION} from './roar-calendar.mjs';
 export const BOOST_SECONDS=6*24*3600;
-export function eventStart(at){const day=Math.floor(at/86400);return (day-((day+3)%7))*86400}
 const address=a=>typeof a==='string'&&/^0x[0-9a-f]{40}$/i.test(a);
 function validRanks(rows){return Array.isArray(rows)&&rows.length<=100&&new Set(rows.map(r=>r.address?.toLowerCase())).size===rows.length&&rows.every((r,i)=>address(r.address)&&r.rank===i+1)}
 export function score(row,at,start){
  if(!/^\d+$/.test(row.balanceRaw)||BigInt(row.balanceRaw)<=0n)throw Error('Invalid balance');
  const since=row.boostStartedAt;
  if(since!==null&&(!Number.isSafeInteger(since)||since<start||since>at))throw Error('Invalid boost start');
- const elapsed=since===null?0:Math.min(BOOST_SECONDS,at-since);
- return {elapsed,boostPercent:200*elapsed/BOOST_SECONDS,pointsNumerator:BigInt(row.balanceRaw)*BigInt(BOOST_SECONDS+2*elapsed)};
+ return eventScore(BigInt(row.balanceRaw),since,at,start);
 }
 export function verifySnapshot(d){
  if(d?.schema!==1||d.status!=='verified'||d.chainId!==25||!address(d.token)||!Number.isInteger(d.decimals)||d.decimals<0||d.decimals>36)throw Error('No verified token snapshot');
- if(!Number.isSafeInteger(d.snapshotTimestamp)||!Number.isSafeInteger(d.snapshotBlock)||d.snapshotBlock<0||d.eventStart!==eventStart(d.snapshotTimestamp)||d.snapshotTimestamp>=d.eventStart+7*86400)throw Error('Invalid event snapshot');
+ if(!Number.isSafeInteger(d.snapshotTimestamp)||!Number.isSafeInteger(d.snapshotBlock)||d.snapshotBlock<0||d.eventStart!==eventStart(d.snapshotTimestamp)||d.snapshotTimestamp>=eventEnd(d.eventStart))throw Error('Invalid event snapshot');
+ if(d.eventEnd!==undefined&&d.eventEnd!==eventEnd(d.eventStart))throw Error('Event end mismatch');
  if(!['complete','balancesVerified','openingBalancesVerified','dexClassificationVerified'].every(k=>d[k]===true))throw Error('Incomplete verification');
  if(!validRanks(d.ranking))throw Error('Invalid ranking');
  const rows=d.ranking.map(r=>({...r,address:r.address.toLowerCase(),...score(r,d.snapshotTimestamp,d.eventStart)}));
@@ -29,4 +30,4 @@ export function movements(current,baseline){
  return ranks;
 }
 export function formatAmount(raw,decimals=18,denominator=1n){const value=BigInt(raw),base=10n**BigInt(decimals)*denominator;const whole=value/base;const fraction=(value%base)*100n/base;return whole.toLocaleString('en-US')+(fraction?'.'+String(fraction).padStart(2,'0'):'')}
-export function formatBoost(value){return value.toFixed(1).replace('.',',')+'%'}
+export function formatBoost(value){return value.toFixed(2)+'%'}

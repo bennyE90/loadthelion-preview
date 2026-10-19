@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
 import {buildSync} from 'esbuild';
+import {eventEnd} from '../site/roar-calendar.mjs';
+import {formatAmount} from '../site/roar-data.mjs';
 import {usdValue} from '../site/roar-usd.mjs';
 const script=buildSync({stdin:{contents:readFileSync(new URL('./public/roar.js',import.meta.url),'utf8').replace(/(\.mjs)\?v=[^']+/g,'$1'),resolveDir:new URL('../site/',import.meta.url).pathname,loader:'js'},bundle:true,format:'iife',write:false}).outputFiles[0].text;
 const snapshot=JSON.parse(readFileSync(new URL('./public/roar-snapshot.json',import.meta.url)));
@@ -10,19 +12,20 @@ class Element{
  children=[];style={};dataset={};listeners={};hidden=false;textContent='';
  append(...elements){this.children.push(...elements)}
  replaceChildren(...elements){this.children=elements}
- setAttribute(){}
+ attributes={};setAttribute(name,value){this.attributes[name]=value}
  addEventListener(name,fn){this.listeners[name]=fn}
  querySelectorAll(selector){return this.children.flatMap(el=>[...(selector==='.roar-usd'&&el.className==='roar-usd'?[el]:[]),...el.querySelectorAll(selector)])}
 }
-async function page({oddsFailure=false,offline=false,priceFailure=false}={}){
- const nodes=new Map(),intervals=[],errors=[];let now=(snapshot.eventStart+604800)*1000-1000;
+async function page({oddsFailure=false,offline=false,priceFailure=false,dataOverride=null}={}){
+ const data=dataOverride||snapshot;
+ const nodes=new Map(),intervals=[],errors=[];let now=eventEnd(data.eventStart)*1000-1000;
  const document={hidden:false,getElementById(id){if(!nodes.has(id))nodes.set(id,new Element());return nodes.get(id)},createElement(){return new Element()},addEventListener(){}};
  class Clock extends Date{constructor(...args){super(...(args.length?args:[now]))}static now(){return now}}
  const fetcher=async url=>{
-  if(url==='/api/roar/price')return priceFailure?new Response(null,{status:503}):Response.json({status:'ok',chainId:25,token:snapshot.token,pair:'0xa3dc34f3c56157e35bd0e20d8800449dacdda2a5',currency:'USD',source:'DEX Screener',priceUsd:'0.00012345',observedAt:Math.floor(now/1000)});
+  if(url==='/api/roar/price')return priceFailure?new Response(null,{status:503}):Response.json({status:'ok',chainId:25,token:data.token,pair:'0xa3dc34f3c56157e35bd0e20d8800449dacdda2a5',currency:'USD',source:'DEX Screener',priceUsd:'0.00012345',observedAt:Math.floor(now/1000)});
   if(url.startsWith('probabilities'))return oddsFailure?new Response(null,{status:503}):Response.json(JSON.parse(readFileSync(new URL('../site/probabilities.json',import.meta.url))));
-  if(url==='/api/roar/snapshot'){if(offline)throw Error('offline');return Response.json(snapshot)}
-  if(url==='roar-snapshot.json')return Response.json(snapshot);
+  if(url==='/api/roar/snapshot'){if(offline)throw Error('offline');return Response.json(data)}
+  if(url==='roar-snapshot.json')return Response.json(data);
   throw Error('Unexpected request '+url);
  };
  vm.runInNewContext(script,{document,fetch:fetcher,Date:Clock,Intl,AbortSignal,AbortController,console:{error:e=>errors.push(e)},MutationObserver:class{observe(){}},setInterval:(fn,ms)=>{intervals.push({fn,ms});return 1},setTimeout,clearTimeout});
@@ -73,4 +76,14 @@ test('Roar keeps holder USD estimates but moves the market panel and duplicate e
  assert(!html.includes('class="stats"'));
  assert(html.includes('home.html#load-dashboard'));
  assert(html.includes('id="roar-price-status"'));
+});
+
+test('calendar leaderboard renders a 250.00% cap, exact 3.5x points and the true month deadline',async()=>{
+ const start=Date.parse('2026-11-21T00:00:00Z')/1000;
+ const ranking=snapshot.ranking.map(r=>({...r,boostStartedAt:start})).sort((a,b)=>BigInt(a.balanceRaw)===BigInt(b.balanceRaw)?a.address.localeCompare(b.address):BigInt(a.balanceRaw)>BigInt(b.balanceRaw)?-1:1).map((r,i)=>({...r,rank:i+1}));
+ const data={...snapshot,eventStart:start,eventEnd:eventEnd(start),snapshotTimestamp:start+8*86400,ranking,dayStartSnapshot:undefined};
+ const p=await page({dataOverride:data});p.advance(0);const row=p.nodes.get('roar-rows').children[0];
+ assert.equal(row.children[3].children[0].textContent,'250.00%');assert.equal(row.children[3].children[1].attributes['aria-valuemax'],'250');assert.equal(row.children[3].children[1].children[0].style.width,'100%');
+ assert.equal(row.children[4].textContent,formatAmount(BigInt(ranking[0].balanceRaw)*35000n,snapshot.decimals,10000n));assert.match(p.nodes.get('roar-clock-deadline').textContent,/30 NOV 2026/);assert.equal(p.nodes.get('roar-clock-mode').textContent,'ULTON TEST · CALENDAR UTC');
+ p.advance(1000);assert.equal(p.nodes.get('roar-clock-mode').textContent,'CLOSED · RESULTS PENDING');
 });

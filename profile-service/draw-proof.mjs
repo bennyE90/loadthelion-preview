@@ -1,3 +1,4 @@
+import {eventStart,eventEnd} from '../site/roar-calendar.mjs';
 import {sha256,toUtf8Bytes} from 'ethers';
 import {fetchBeacon} from 'drand-client';
 import approved from '../site/probabilities.json' with {type:'json'};
@@ -14,8 +15,8 @@ export async function verifyPublicDraw(p){
  const f=p?.final,d=p?.draw,plan=p?.plan;
  if(canonical(p?.probabilitiesPercent)!==canonical(approved.probabilitiesPercent))throw Error('Unapproved probability change');
  if(p?.schema!==1||p.environment!=='ULTON_TEST'||p.prizesEnabled!==false||!f||!d||!plan||p.onchain?.status!=='NOT_REGISTERED')throw Error('Unexpected draw scope');
- const token='0x7ebfd1b08e1d7413d6d8fe6c3eef28945ce776ef',week=f.eventStart,end=week+604800;
- if(!Number.isSafeInteger(week)||week%604800!==345600||f.token!==token||f.snapshotTimestamp!==end-1||f.ranking?.length!==100||new Set(f.ranking.map(r=>r.address)).size!==100||f.ranking.some((r,i)=>r.rank!==i+1||!/^0x[0-9a-f]{40}$/.test(r.address)))throw Error('Invalid final candidates');
+ const token='0x7ebfd1b08e1d7413d6d8fe6c3eef28945ce776ef',week=f.eventStart,end=eventEnd(week);
+ if(!Number.isSafeInteger(week)||eventStart(week)!==week||f.token!==token||f.snapshotTimestamp!==end-1||f.ranking?.length!==100||new Set(f.ranking.map(r=>r.address)).size!==100||f.ranking.some((r,i)=>r.rank!==i+1||!/^0x[0-9a-f]{40}$/.test(r.address)))throw Error('Invalid final candidates');
  const b=f.boundary,number=x=>Number(BigInt(x));
  if(!b||number(b.block.number)!==f.snapshotBlock||b.block.hash!==f.blockHash||number(b.block.timestamp)>=end||number(b.nextBlock.timestamp)<end||number(b.nextBlock.number)!==f.snapshotBlock+1||b.nextBlock.parentHash!==f.blockHash||number(b.safeHead)<number(b.nextBlock.number))throw Error('Invalid final boundary');
  const weights=units(p.probabilitiesPercent),release=end+3600,round=Math.ceil((release-BEACON.genesis_time)/BEACON.period)+1;

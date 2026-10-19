@@ -1,6 +1,6 @@
-import {BOOST_SECONDS,eventStart,movements,formatAmount,formatBoost} from './roar-data.mjs?v=20261017-boost1';
-import {createRoarFeed} from './roar-feed.mjs?v=20261017-live1';
-import {snapshotStatus} from './roar-status.mjs?v=20261017-close1';
+import {BOOST_SECONDS,eventStart,eventEnd,ACTIVATION,movements,formatAmount,formatBoost} from './roar-data.mjs?v=20261019-calendar2';
+import {createRoarFeed} from './roar-feed.mjs?v=20261019-calendar2';
+import {snapshotStatus} from './roar-status.mjs?v=20261019-calendar2';
 import {validatePrice,usdValue} from './roar-usd.mjs?v=20261017-usd1';
 const feed=createRoarFeed();
 let marketQuote=null,priceBusy=false,priceFailed=false,valuationKey='';
@@ -21,6 +21,7 @@ const less=document.getElementById('roar-show-less');
 let visible=10,current=null,busy=false,feedState='unavailable';
 function cell(cls,text){const el=document.createElement('span');el.className=cls;el.textContent=text;return el}
 function render(snapshot,baseline){
+ const legend=document.getElementById('roar-legend');if(legend)legend.textContent='Points = token balance × (1 + ROAR BOOST / 100). '+(snapshot&&snapshot.eventStart<ACTIVATION?'This transition event uses the archived +200% / six-day boost rules. +250% over eight days starts on 21 Oct 2026.':'ROAR BOOST grows in +0.01 percentage-point steps from 0.00% to 250.00% over eight days.')+' Arrows compare positions with 00:00 UTC. Swipe horizontally to see every column.';
  const rows=snapshot?.ranking||Array.from({length:100},(_,i)=>({rank:i+1}));
  const changes=snapshot?movements(snapshot,baseline):new Map();root.replaceChildren();
  for(const x of rows){
@@ -30,8 +31,8 @@ function render(snapshot,baseline){
   const wallet=cell('roar-name',x.address?'Holder '+String(x.rank).padStart(3,'0'):'Awaiting launch');const hint=cell('roar-address',x.address?x.address.slice(0,6)+'…'+x.address.slice(-4):'Reserved position');if(x.address)wallet.title=x.address;wallet.append(hint);
   const amount=cell('roar-amount',snapshot?formatAmount(x.balanceRaw,snapshot.decimals):'—');
   const usd=cell('roar-usd','— USD');usd.dataset.balanceRaw=x.balanceRaw||'';amount.append(usd);
-  const boost=cell('roar-boost','');const pct=cell('roar-boost-pct',snapshot?formatBoost(x.boostPercent):'—');const track=document.createElement('div');track.className='roar-boost-track';track.setAttribute('role','progressbar');track.setAttribute('aria-label',snapshot?'ROAR BOOST':'ROAR BOOST waiting for verified data');track.setAttribute('aria-valuemin','0');track.setAttribute('aria-valuemax','200');if(snapshot){track.setAttribute('aria-valuenow',x.boostPercent.toFixed(1));track.setAttribute('aria-valuetext',formatBoost(x.boostPercent))}const fill=document.createElement('i');fill.style.width=(snapshot?x.boostPercent/2:0)+'%';track.append(fill);boost.append(pct,track);
-  const points=cell('roar-points',snapshot?formatAmount(x.pointsNumerator,snapshot.decimals,BigInt(BOOST_SECONDS)):'—');const chance=cell('roar-chance',odds?chanceFormat.format(odds[x.rank-1])+'%':'—');chance.title=odds?'Confirmed weighting for rank '+x.rank+' in the full 100-wallet draw; display rounded, original precision preserved':'Chance table unavailable · no probability estimated';
+  const boost=cell('roar-boost','');const pct=cell('roar-boost-pct',snapshot?formatBoost(x.boostPercent):'—');const track=document.createElement('div');track.className='roar-boost-track';track.setAttribute('role','progressbar');track.setAttribute('aria-label',snapshot?'ROAR BOOST':'ROAR BOOST waiting for verified data');track.setAttribute('aria-valuemin','0');track.setAttribute('aria-valuemax',String(x.boostMaxPercent||250));if(snapshot){track.setAttribute('aria-valuenow',x.boostPercent.toFixed(2));track.setAttribute('aria-valuetext',formatBoost(x.boostPercent))}const fill=document.createElement('i');fill.style.width=(snapshot?100*x.boostPercent/x.boostMaxPercent:0)+'%';track.append(fill);boost.append(pct,track);
+  const points=cell('roar-points',snapshot?formatAmount(x.pointsNumerator,snapshot.decimals,BigInt(x.pointsDenominator)):'—');const chance=cell('roar-chance',odds?chanceFormat.format(odds[x.rank-1])+'%':'—');chance.title=odds?'Confirmed weighting for rank '+x.rank+' in the full 100-wallet draw; display rounded, original precision preserved':'Chance table unavailable · no probability estimated';
   row.append(rank,wallet,amount,boost,points,chance);root.append(row);
  }
  show();valuationKey='';updateMarket();
@@ -59,7 +60,7 @@ function updateStatus(){
 }
 function updateCountdown(){
  updateMarket();
- const now=Math.floor(Date.now()/1000),start=current?current.eventStart:eventStart(now),end=start+7*86400;
+ const now=Math.floor(Date.now()/1000),start=current?current.eventStart:eventStart(now),end=eventEnd(start);
  let remaining=Math.max(0,end-now);
  for(const [id,seconds] of [['roar-days',86400],['roar-hours',3600],['roar-minutes',60],['roar-seconds',1]]){const el=document.getElementById(id);if(el)el.textContent=String(Math.floor(remaining/seconds)).padStart(2,'0');remaining%=seconds}
  document.getElementById('roar-clock-mode').textContent=updateStatus().mode;

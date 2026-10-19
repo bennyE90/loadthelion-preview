@@ -1,4 +1,4 @@
-import {verifySnapshot} from './roar-data.mjs';
+import {verifySnapshot} from './roar-data.mjs?v=20261019-calendar2';
 const TOKEN='0x7ebfd1b08e1d7413d6d8fe6c3eef28945ce776ef';
 const core=s=>JSON.stringify({token:s.token,eventStart:s.eventStart,decimals:s.decimals,eligibleWallets:s.eligibleWallets,ranking:s.ranking.map(r=>[r.address,r.balanceRaw,r.boostStartedAt,r.rank])});
 export function createRoarFeed({fetcher=fetch,now=()=>Date.now()}={}){

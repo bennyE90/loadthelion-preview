@@ -1,3 +1,4 @@
+import {eventEnd} from '../site/roar-calendar.mjs';
 import probabilityData from '../site/probabilities.json' with {type:'json'};
 import {hash,verifyPublicDraw} from './draw-proof.mjs';
 import {verifySnapshot} from '../site/roar-data.mjs';
@@ -18,7 +19,7 @@ export function createDrawService({token,fetcher=fetch,now=()=>Date.now()}={}){
   if(hash(full)!==record.hash||full.kind!=='final'||full.eventId!==event.id||full.snapshotBlock!==record.block||full.snapshotTimestamp!==record.at||full.prizesEnabled!==false||full.snapshotTimestamp>=Math.floor(now()/1000))throw Error('Final archive mismatch');
   verifySnapshot({...full,schema:1});
   const units=approved.map(v=>{const [a,b='']=String(v).split('.');return String(BigInt(a)*10n**12n+BigInt(b.padEnd(12,'0')))});
-  const end=full.eventStart+604800,round=event.draw.round;
+  const end=eventEnd(full.eventStart),round=event.draw.round;
   const plan={schema:1,eventId:event.id,snapshotHash:record.hash,weightsHash:hash(units),chainHash:'8990e7a9aaed2ffed73dbd7092123d6f289930540d7651336225dc172e51b2ce',round,releaseTime:1595431050+(round-1)*30,algorithm:'SHA256_REJECTION_SAMPLING_V1',prizesEnabled:false};
   const payload={schema:1,status:'VERIFIED',environment:'ULTON_TEST',prizesEnabled:false,archiveCommit:commit,final:{token:full.token,eventStart:full.eventStart,snapshotTimestamp:full.snapshotTimestamp,snapshotBlock:full.snapshotBlock,blockHash:full.blockHash,boundary:full.boundary,snapshotHash:record.hash,ranking:full.ranking},plan,draw:event.draw,probabilitiesPercent:approved,onchain:{status:'NOT_REGISTERED',chainId:25,transactionHash:null}};
   await verifyPublicDraw(payload);return payload;
