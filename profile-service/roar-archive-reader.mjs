@@ -18,7 +18,7 @@ export function createArchiveReader({token,fetcher=fetch,now=()=>Date.now(),ttl=
   if(matches.length!==1||!/^[0-9a-f]{64}$/.test(matches[0].hash))throw Error('Current snapshot missing from archive');
   const hash=matches[0].hash,full=await contents('snapshots/'+hash+'.json');
   if(snapshotHash(full)!==hash||full.eventId!==eventId||full.kind!=='current')throw Error('Full snapshot hash mismatch');
-  const {allRanking,excludedAddresses,boundary,kind,eventId:unused,schema,...publicData}=full;
+  const {allRanking,excludedAddresses,buyQualificationEvidence,boundary,kind,eventId:unused,schema,...publicData}=full;
   if(snapshotHash({...publicData,schema:1})!==snapshotHash(snapshot))throw Error('Public snapshot differs from archive');
   let opening=null,openingHash=null;
   if(withOpening){

@@ -12,10 +12,12 @@ export function createPreviewService({token,fetcher=fetch,now=()=>Date.now()}={}
    let baseline=null;
    if(opening){
     try{
-     if(opening.environment!=='ULTON_TEST'||opening.prizesEnabled!==false||opening.allRanking.some(r=>r.boostStartedAt!==opening.eventStart))throw Error('Invalid opening archive');
-     const {allRanking,excludedAddresses,boundary,kind,eventId,schema,...publicData}=opening;
-     const baseSource={...publicData,schema:1};
-     const ranking=previewRows(baseSource,allRanking).slice(0,100).map(r=>({rank:r.rank,address:r.address,balanceRaw:r.balanceRaw,sourceBoostStartedAt:opening.eventStart,sourceBoostAtOpening:true}));
+     if(opening.environment!=='ULTON_TEST'||opening.prizesEnabled!==false||opening.allRanking.some(r=>opening.resetPolicy==='MIN_BUY_USD5_V1'?r.boostStartedAt!==null:r.boostStartedAt!==opening.eventStart))throw Error('Invalid opening archive');
+     const {allRanking,excludedAddresses,buyQualificationEvidence,boundary,kind,eventId,schema,...publicData}=opening;
+     const gated=source.resetPolicy==='MIN_BUY_USD5_V1';
+     const baseRows=gated?allRanking.map(r=>({...r,boostStartedAt:null,boostAtOpening:false})):allRanking;
+     const baseSource={...publicData,schema:1,...(gated?{resetPolicy:source.resetPolicy,minimumBuyUsd:'5.00',ranking:baseRows.slice(0,100)}:{})};
+     const ranking=previewRows(baseSource,baseRows).slice(0,100).map(r=>({rank:r.rank,address:r.address,balanceRaw:r.balanceRaw,sourceBoostStartedAt:gated?null:opening.eventStart,sourceBoostAtOpening:!gated}));
      const candidate={source:baseSource,ranking,boundary,snapshotHash:openingHash,comparisonTimestamp:opening.eventStart};
      verifyPreviewBaseline(candidate,source);baseline=candidate;
     }catch{/* Preserve current preview when yesterday's verified baseline is unavailable. */}

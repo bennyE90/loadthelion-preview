@@ -70,3 +70,19 @@ test('a reset exactly at midnight restarts at 0% rather than receiving simulated
  const later=previewRows({...source,snapshotTimestamp:start+3600},[{...reset,boostStartedAt:start+100}])[0];assert(later.boostPercent>0&&later.boostPercent<31.25);
  assert.throws(()=>previewRows(source,[{...reset,boostAtOpening:'true'}]));
 });
+
+test('minimum-buy preview keeps opening holders inactive and normalizes the archived opening baseline to zero',async()=>{
+ const data=fixture(),{opening,hash}=addOpening(data);
+ const rows=data.full.allRanking.map((r,i)=>({...r,boostStartedAt:i===0?start+100:null,boostAtOpening:false}));
+ const points=r=>BigInt(r.balanceRaw)*BigInt(r.boostStartedAt===null?518400:518400+2*(data.source.snapshotTimestamp-r.boostStartedAt));
+ rows.sort((a,b)=>points(a)===points(b)?a.address.localeCompare(b.address):points(a)>points(b)?-1:1);rows.forEach((r,i)=>r.rank=i+1);
+ data.source={...data.source,resetPolicy:'MIN_BUY_USD5_V1',minimumBuyUsd:'5.00',ranking:rows.slice(0,100)};
+ data.full={...data.full,...data.source,schema:2,allRanking:rows,buyQualificationEvidence:[{privateEvidence:'server only'}]};
+ data.index.events[0].snapshots.find(r=>r.kind==='current').hash=snapshotHash(data.full);
+ const handler=createPreviewService({token:'test-token',now:()=>data.source.snapshotTimestamp*1000,fetcher:async url=>{const p=new URL(url).pathname;return Response.json(p.includes('/git/ref/')?{object:{sha:'a'.repeat(40)}}:p.endsWith('/latest.json')?data.source:p.endsWith('/index.json')?data.index:p.includes(hash)?opening:data.full)}});
+ const response=await handler(new Request('https://test.example/api/roar/preview'));assert.equal(response.status,200);const payload=await response.json(),preview=verifyRoarPreview(payload);
+ assert(preview.baseline);assert(preview.baseline.ranking.every(r=>r.boostPercent===0&&r.boostStartedAt===null));
+ assert.equal(preview.ranking.find(r=>r.address===wallet(2)).boostPercent,0);assert.equal(preview.ranking.find(r=>r.address===wallet(1)).boostPercent,1.26);
+ assert.equal(payload.source.buyQualificationEvidence,undefined);assert.equal(payload.baseline.source.buyQualificationEvidence,undefined);
+ const falseOpening={...rows[0],boostAtOpening:true,boostStartedAt:start};assert.throws(()=>previewRows(data.source,[falseOpening]));
+});

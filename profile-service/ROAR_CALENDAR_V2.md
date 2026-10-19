@@ -18,14 +18,15 @@ produce 27/28-second spacing. Points use exact integers:
 `balanceRaw × (10000 + steps) / 10000`. No rounding up or floating-point
 ranking is used. Display uses two decimal places, English formatting.
 
-Existing holders reset to zero boost at opening. A verified DEX purchase starts
-an inactive wallet; additional purchases preserve its start and apply its
-boost to the full received balance. A sale or outgoing contest-token transfer
-resets it and, from the 19 October transition test onward, immediately restarts
-it at the outgoing block timestamp on any remaining balance. Full exits stop
-accrual. Ordinary incoming transfers cannot restart an inactive wallet. Zero-value token
-transfers, approvals, native gas and transactions in other assets retain the
-existing treatment. All eligible wallets accrue boost, not just the Top 100.
+Every event opens with boost **0% and inactive for all wallets**, including
+existing holders. A single authenticated purchase worth at least **5 USD**
+activates it at its verified block timestamp. Separate sub-threshold purchases
+do not accumulate. Further buys preserve an already active clock and apply the
+multiplier to the full balance. Any positive sale, outgoing transfer, burn or
+self-transfer resets the clock to inactive. Another qualifying $5+ purchase is
+required even if tokens remain. Gifts cannot activate or reactivate boost.
+Zero-value transfers, approvals, native gas and other assets do not reset it.
+All eligible wallets participate, including those outside the Top 100.
 Daily movement arrows still reset at 00:00 UTC, independently of rounds.
 
 The snapshot score never extrapolates beyond a verified block. Each final uses
@@ -40,8 +41,8 @@ hour after the actual close; no replacement seeds or changed weights are used.
 The canonical calendar module is copied byte-for-byte to the website.
 
 
-Restart policy version: AUTO_RESTART_REMAINING_V1 from event start
-19 October 2026 (1792368000). Earlier completed events preserve their original
-buy-to-restart reset semantics. New snapshots retain a boostAtOpening marker
-so an outgoing transfer exactly at midnight cannot receive simulated opening
-boost. The clock uses verified outgoing block time, never page load time.
+Current activation policy: `MIN_BUY_USD5_V1`, applied to the active 19 October
+2026 private test and later events. This supersedes the briefly tested automatic
+restart policy. Completed earlier archives and their signed draws stay unchanged.
+The current event is recomputed from its verified opening and purchase history.
+See `ROAR_MIN_BUY.md` for the USD reference and supported test routes.

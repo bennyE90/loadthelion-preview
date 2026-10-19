@@ -9,7 +9,9 @@ export function previewRows(source,rows){
  return rows.map(r=>{
   if(!/^0x[0-9a-f]{40}$/.test(r.address)||seen.has(r.address))throw Error('Invalid preview wallet');seen.add(r.address);score(r,source.snapshotTimestamp,source.eventStart);
   if(r.boostAtOpening!==undefined&&(typeof r.boostAtOpening!=='boolean'||r.boostAtOpening&&r.boostStartedAt!==source.eventStart))throw Error('Invalid opening activation marker');
-  const assumedOpening=r.boostAtOpening===true||r.boostAtOpening===undefined&&r.boostStartedAt===source.eventStart;
+  const gated=source.resetPolicy==='MIN_BUY_USD5_V1';
+  if(gated&&r.boostAtOpening===true)throw Error('Minimum-buy boost cannot start at opening');
+  const assumedOpening=!gated&&(r.boostAtOpening===true||r.boostAtOpening===undefined&&r.boostStartedAt===source.eventStart);
   const since=assumedOpening?PREVIEW_START:r.boostStartedAt;
   const elapsed=since===null?0:Math.min(8*86400,Math.max(0,source.snapshotTimestamp-since));
   const steps=Math.floor(elapsed*25000/(8*86400));
@@ -28,7 +30,9 @@ export function verifyPreviewBaseline(payload,current){
  if(source.eventStart!==current.eventStart||source.chainId!==current.chainId||source.token!==current.token||source.decimals!==current.decimals||source.snapshotTimestamp!==day||payload.comparisonTimestamp!==day||source.snapshotBlock>current.snapshotBlock||source.prizesEnabled!==false)throw Error('Wrong baseline day or event');
  const b=payload.boundary,n=x=>Number(BigInt(x));
  if(!b||n(b.block.number)!==source.snapshotBlock||b.block.hash!==source.blockHash||n(b.block.timestamp)>=day||n(b.block.timestamp)<day-86400||n(b.nextBlock.timestamp)<day||n(b.nextBlock.number)!==source.snapshotBlock+1||b.nextBlock.parentHash!==source.blockHash||n(b.safeHead)<n(b.nextBlock.number))throw Error('Unproven midnight boundary');
- if(payload.ranking.some(r=>r.sourceBoostStartedAt!==source.eventStart||r.sourceBoostAtOpening===false))throw Error('Invalid opening boost state');
+ const gated=current.resetPolicy==='MIN_BUY_USD5_V1';
+ if(gated&&source.resetPolicy!==current.resetPolicy)throw Error('Wrong baseline boost policy');
+ if(payload.ranking.some(r=>gated?r.sourceBoostStartedAt!==null||r.sourceBoostAtOpening!==false:r.sourceBoostStartedAt!==source.eventStart||r.sourceBoostAtOpening===false))throw Error('Invalid opening boost state');
  return {...source,comparisonTimestamp:day,snapshotTimestamp:n(b.block.timestamp),ranking:verifiedRows(source,payload.ranking)};
 }
 export function verifyRoarPreview(payload){

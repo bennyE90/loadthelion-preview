@@ -93,3 +93,14 @@ Current source rows carry boostAtOpening to distinguish a real opening from
 a buy/outgoing transfer timestamped exactly at 00:00 UTC. The simulation only
 retrodates true opening activations; outgoing resets always keep their real
 timestamps. Historical closed snapshots and signed results remain unchanged.
+
+
+## Current $5 boost activation policy
+
+`MIN_BUY_USD5_V1` supersedes the automatic-restart experiment above. Every event
+starts all wallets at inactive 0%. One $5+ purchase activates boost. A sale or
+outgoing token transfer resets it; another $5+ buy is required. Smaller separate
+purchases do not accumulate. Additional buys preserve an already active clock.
+The preview no longer assumes opening holders had eight prior holding days.
+Rewards still use final rank, with unchanged weights and no real payouts.
+See `ROAR_MIN_BUY.md` for historical price reference and private test coverage.

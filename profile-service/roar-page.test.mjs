@@ -133,7 +133,7 @@ test('live preview renders maximum boost, matching points/rank, the simulated de
  assert.equal(row.children[4].children[0].textContent,'250.00%');assert.equal(row.children[5].textContent,formatAmount(BigInt(ranking[0].balanceRaw)*35000n,18,10000n));
  assert.equal(p.nodes.get('roar-pool-percent').textContent,'91.66/100%');assert.equal(p.nodes.get('roar-pool-fill').style.width,'91.66%');assert.equal(p.nodes.get('roar-pool-meter').attributes['aria-valuenow'],'91.66');
  assert.match(p.nodes.get('roar-clock-deadline').textContent,/19 OCT 2026/);assert.equal(p.nodes.get('roar-clock-mode').textContent,'ULTON TEST · SIMULATED EVENT');
- assert.match(p.nodes.get('roar-legend').textContent,/Opening holders are assumed/);
+ assert.match(p.nodes.get('roar-legend').textContent,/Everyone starts at 0%/);
  const html=readFileSync(new URL('./public/roar.html',import.meta.url),'utf8');assert.match(html,/roar-page-title">TOP 100 <em>ROAR/);assert(!html.includes('id="roar-pool-total"'));assert(!html.includes('id="roar-pool-remaining"'));assert(!html.includes('id="roar-pool-emitted"'));
 });
 
