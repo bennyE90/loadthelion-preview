@@ -83,7 +83,7 @@ test('server reader pins all reads to the same private commit and coalesces conc
   return Response.json(path.endsWith('/latest.json')?data.snapshot:path.endsWith('/index.json')?data.index:data.full);
  }});
  const [a,b]=await Promise.all([reader(),reader()]);assert.deepEqual(a,b);assert.equal(a.archive.snapshotHash,data.hash);assert.equal(calls.length,4);assert(calls.every(c=>c.options.headers.Authorization==='Bearer read-only-test'&&!c.url.includes('read-only-test')));
- await reader();assert.equal(calls.length,4);time+=300001;await reader();assert.equal(calls.length,8);
+ await reader();assert.equal(calls.length,4);time+=59999;await reader();assert.equal(calls.length,4);time+=1;await reader();assert.equal(calls.length,8);
 });
 test('server reader rejects altered full rankings and public/archive mismatches',async()=>{
  for(const mode of ['full','public','ref','denied']){
@@ -102,4 +102,14 @@ test('read-through publication works behind private site login and retains its l
  const url=PUBLISH_URL.replace('publish','snapshot');const r=await handler(new Request(url));assert.equal(r.status,200);assert.equal((await r.json()).publication.runId,'archive-read');assert.equal(calls,1);
  fail=true;const later=createRoarRelay({store,now:()=>now+601000,archiveReader:async()=>{throw Error('GitHub unavailable')}});const retained=await later(new Request(url));assert.equal(retained.status,200);assert.equal((await retained.json()).snapshotBlock,data.snapshot.snapshotBlock);
  const empty=createRoarRelay({store:memoryStore(),...opts,archiveReader:async()=>{throw Error('permission denied')}});assert.equal((await empty(new Request(url))).status,503);
+});
+
+test('private feed checks the archive after one minute and publishes a newer verified snapshot',async()=>{
+ const store=memoryStore();let clock=now,calls=0;
+ const first=fixture(),second={...fixture(),snapshotTimestamp:first.snapshotTimestamp+60,snapshotBlock:first.snapshotBlock+100};
+ const handler=createRoarRelay({store,now:()=>clock,archiveReader:async()=>({snapshot:++calls===1?first:second,archive})});
+ const url=PUBLISH_URL.replace('publish','snapshot');
+ assert.equal((await (await handler(new Request(url))).json()).snapshotBlock,first.snapshotBlock);
+ clock=now+59999;await handler(new Request(url));assert.equal(calls,1);
+ clock=now+60000;assert.equal((await (await handler(new Request(url))).json()).snapshotBlock,second.snapshotBlock);assert.equal(calls,2);
 });

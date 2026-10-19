@@ -83,7 +83,7 @@ export function createRoarRelay({store,loadKeys,archiveReader,now=()=>Date.now()
   if(path==='/api/roar/snapshot'&&['GET','HEAD'].includes(request.method)){
    try{
     let row=await read('latest');
-    if(archiveReader&&(!row||now()/1000-row.data.publication.publishedAt>=600)){
+    if(archiveReader&&(!row||now()/1000-row.data.publication.publishedAt>=60)){
      let stage='archive-read';
      try{const payload=await archiveReader();stage='snapshot-validation';validatePublishedSnapshot(payload.snapshot,payload.archive,now());stage='archive-publication';await save(payload.snapshot,payload.archive,{run_id:'archive-read',run_attempt:'1'});row=await read('latest')}catch(error){console.warn('Roar refresh failed',stage,/^ARCHIVE_HTTP_\d{3}$/.test(error?.code||'')?error.code:'UNAVAILABLE');/* Never log credentials, headers, response bodies or arbitrary error messages. */}
     }
