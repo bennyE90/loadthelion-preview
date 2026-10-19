@@ -16,9 +16,9 @@ class Element{
  addEventListener(name,fn){this.listeners[name]=fn}
  querySelectorAll(selector){return this.children.flatMap(el=>[...(selector==='.roar-usd'&&el.className==='roar-usd'?[el]:[]),...el.querySelectorAll(selector)])}
 }
-async function page({oddsFailure=false,offline=false,priceFailure=false,dataOverride=null,rewardsFinal=null}={}){
+async function page({oddsFailure=false,offline=false,priceFailure=false,dataOverride=null,rewardsFinal=null,nowOverride=null}={}){
  const data=dataOverride||snapshot;
- const nodes=new Map(),intervals=[],errors=[];let now=eventEnd(data.eventStart)*1000-1000;
+ const nodes=new Map(),intervals=[],errors=[];let now=nowOverride??(eventEnd(data.eventStart)*1000-1000);
  const document={hidden:false,getElementById(id){if(!nodes.has(id))nodes.set(id,new Element());return nodes.get(id)},createElement(){return new Element()},addEventListener(){}};
  class Clock extends Date{constructor(...args){super(...(args.length?args:[now]))}static now(){return now}}
  const fetcher=async url=>{
@@ -92,18 +92,18 @@ test('calendar leaderboard renders a 250.00% cap, exact 3.5x points and the true
 
 test('live rewards release alongside chance and remain pending at deadline, without a fabricated final payout',async()=>{
  const start=1792368000,ranking=snapshot.ranking.map(r=>({...r,boostStartedAt:null})).sort((a,b)=>BigInt(a.balanceRaw)===BigInt(b.balanceRaw)?a.address.localeCompare(b.address):BigInt(a.balanceRaw)>BigInt(b.balanceRaw)?-1:1).map((r,i)=>({...r,rank:i+1}));
- const p=await page({dataOverride:{...snapshot,eventStart:start,eventEnd:eventEnd(start),snapshotTimestamp:start+86400,ranking,dayStartSnapshot:undefined}}),row=p.nodes.get('roar-rows').children[0];p.advance(0);
+ const p=await page({nowOverride:1792454400000-1000,dataOverride:{...snapshot,eventStart:start,eventEnd:eventEnd(start),snapshotTimestamp:start+3600,ranking,dayStartSnapshot:undefined}}),row=p.nodes.get('roar-rows').children[0];p.advance(0);
  assert.equal(row.children.length,7);assert.equal(row.children[5].textContent,'5.00%');
  assert.match(row.children[6].children[0].textContent,/ULTON/);assert.match(row.children[6].children[1].textContent,/≈ \$/);
  assert.equal(row.children[6].children[2].textContent,'ESTIMATE · LOCKED');
  assert.equal(p.nodes.get('roar-pool-total').textContent,'1,000,000 ULTON');
  p.advance(1000);assert.equal(p.nodes.get('roar-pool-remaining').textContent,'0 ULTON');
- assert.equal(row.children[6].children[0].textContent,'—');assert.equal(row.children[6].children[2].textContent,'FINAL SNAPSHOT PENDING');
- assert.match(p.nodes.get('roar-pool-status').textContent,/FINAL SNAPSHOT PENDING/);
+ assert.equal(row.children[6].children[0].textContent,'—');assert.equal(row.children[6].children[2].textContent,'PREVIEW COMPLETE');
+ assert.match(p.nodes.get('roar-pool-status').textContent,/SIMULATION COMPLETE/);
 });
 
 test('only a verified final snapshot replaces the live ranking and fixes the simulated reward shares',async()=>{
- const full=JSON.parse(readFileSync(new URL('./fixtures/roar-draw-real.json',import.meta.url))).full,start=1792368000,end=eventEnd(start);
+ const full=JSON.parse(readFileSync(new URL('./fixtures/roar-draw-real.json',import.meta.url))).full,start=Date.parse('2026-11-21T00:00:00Z')/1000,end=eventEnd(start);
  const ranking=full.ranking.map(r=>({...r,boostStartedAt:null})).sort((a,b)=>BigInt(a.balanceRaw)===BigInt(b.balanceRaw)?a.address.localeCompare(b.address):BigInt(a.balanceRaw)>BigInt(b.balanceRaw)?-1:1).map((r,i)=>({...r,rank:i+1}));
  const data={...snapshot,eventStart:start,eventEnd:end,snapshotTimestamp:start+86400,ranking,dayStartSnapshot:undefined};
  const boundary=structuredClone(full.boundary);boundary.block.timestamp='0x'+(end-1).toString(16);boundary.nextBlock.timestamp='0x'+end.toString(16);

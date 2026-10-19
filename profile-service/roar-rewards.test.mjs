@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {allocateRewards,poolState,POOL_RAW,POOL_START,verifyRewardFinal} from '../site/roar-rewards.mjs';
+import {allocateRewards,poolState,rewardPoolState,POOL_RAW,POOL_START,verifyRewardFinal} from '../site/roar-rewards.mjs';
 import {eventEnd} from '../site/roar-calendar.mjs';
 import {snapshotHash} from './roar-relay.mjs';
 import {createRewardsService} from './roar-rewards-service.mjs';
@@ -55,4 +55,13 @@ test('hash mismatch, post-deadline block and incomplete Top 100 cannot finalize'
 });
 test('reward endpoint rejects future, noncanonical and pre-simulation events',async()=>{
  const s=service();for(const start of [POOL_START+1,POOL_START-604800,Date.parse('2026-11-01Z')/1000,'abc'])assert.equal((await s.get(start)).status,400);
+});
+
+test('day-nine pool preview releases exactly 90% after nine days, preserves total and stops at the simulated deadline',()=>{
+ const start=Date.parse('2026-10-10T00:00:00Z')/1000,end=Date.parse('2026-10-20T00:00:00Z')/1000;
+ const preview=rewardPoolState(POOL_START,start+9*86400);
+ assert.equal(preview.preview,true);assert.equal(preview.start,start);assert.equal(preview.end,end);assert.equal(preview.emitted,900000n*10n**18n);assert.equal(preview.remaining,100000n*10n**18n);
+ assert.equal(allocateRewards(preview.emitted,odds)[0],45000n*10n**18n);
+ assert.equal(rewardPoolState(POOL_START,end).remaining,0n);assert.equal(rewardPoolState(POOL_START,end+86400).emitted,POOL_RAW);
+ const next=Date.parse('2026-10-21T00:00:00Z')/1000;assert.equal(rewardPoolState(next,next).preview,false);assert.equal(rewardPoolState(next,next).emitted,0n);
 });

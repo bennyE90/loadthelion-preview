@@ -37,3 +37,15 @@ cannot be replaced by a later read of the stale current feed.
 USD amounts reuse the validated ULTON market quote, expire with it, and remain
 unavailable when no valid price exists. They do not affect token allocations,
 points, boosts or lottery weights. All added interface text is English.
+
+## Day-nine visual preview (19 October)
+
+For the transition event only, the pool UI uses a separate, clearly labeled
+10 October 00:00 UTC → 20 October 00:00 UTC ten-day preview. At 19 October
+00:00 UTC, exactly 900,000 ULTON is released and 100,000 remains; rank #1 has
+a 45,000 ULTON estimate. The preview keeps advancing with real UTC time.
+Verified rankings, boosts, snapshot dates, actual event timers and the final
+archive endpoint are unchanged. This pool-only preview cannot finalize or
+claim anything using the actual event's different deadline. At the preview
+cutoff it stops at one million, hides unfinalized individual estimates and
+shows SIMULATION COMPLETE. Subsequent calendar events use normal pool timing.

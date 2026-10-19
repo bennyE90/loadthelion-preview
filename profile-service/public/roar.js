@@ -2,7 +2,7 @@ import {BOOST_SECONDS,eventStart,eventEnd,ACTIVATION,movements,formatAmount,form
 import {createRoarFeed} from './roar-feed.mjs?v=20261019-calendar2';
 import {snapshotStatus} from './roar-status.mjs?v=20261019-calendar2';
 import {validatePrice,usdValue} from './roar-usd.mjs?v=20261017-usd1';
-import {poolState,allocateRewards,verifyRewardFinal,REWARD_TOKEN} from './roar-rewards.mjs?v=20261019-pool1';
+import {rewardPoolState,allocateRewards,verifyRewardFinal,REWARD_TOKEN} from './roar-rewards.mjs?v=20261019-poolday9';
 const feed=createRoarFeed();
 let marketQuote=null,priceBusy=false,priceFailed=false,valuationKey='';
 const root=document.getElementById('roar-rows'),more=document.getElementById('roar-show-more'),count=document.getElementById('roar-count'),status=document.getElementById('roar-data-status');
@@ -111,7 +111,7 @@ refreshMarket();setInterval(()=>{if(!document.hidden)refreshMarket()},60000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshMarket()});
 
 function updateRewards(){
- const start=current?.eventStart??eventStart(Math.floor(Date.now()/1000)),state=poolState(start,Math.floor(Date.now()/1000));
+ const start=current?.eventStart??eventStart(Math.floor(Date.now()/1000)),state=rewardPoolState(start,Math.floor(Date.now()/1000));
  const supported=current?.token===REWARD_TOKEN&&current?.decimals===18&&state.funded;
  const set=(id,value)=>{const el=document.getElementById(id);if(el)el.textContent=value};
  let quote=null;try{quote=validatePrice(marketQuote)}catch{}
@@ -122,23 +122,25 @@ function updateRewards(){
  set('roar-pool-remaining',state.funded?display(state.remaining):'—');
  set('roar-pool-usd',state.funded?dollars(state.remaining):'— USD');
  const meter=document.getElementById('roar-pool-fill');if(meter)meter.style.width=state.remainingPercent+'%';
- const confirmed=finalReward?.eventStart===start;
- set('roar-pool-status',!supported?'Waiting for verified ULTON event data':confirmed?'FINAL ALLOCATION VERIFIED · TEST ONLY':state.closed?'EVENT CLOSED · FINAL SNAPSHOT PENDING':'LIVE ESTIMATES · CLAIMS LOCKED UNTIL EVENT END');
- set('roar-pool-caption',state.closed?'The simulated pool is fully released. Only the verified final Top 100 fixes each allocation.':'Released evenly over this event. Estimates follow the current rank and may change.');
+ const confirmed=!state.preview&&finalReward?.eventStart===start;
+ const remainingSeconds=Math.max(0,state.end-Math.floor(Date.now()/1000));
+ set('roar-pool-timeline',state.preview?'SIMULATED EVENT · 10–19 OCT 2026 UTC · '+(state.closed?'PREVIEW COMPLETE':Math.floor(remainingSeconds/3600)+'H '+String(Math.floor(remainingSeconds%3600/60)).padStart(2,'0')+'M REMAINING'):'Rewards follow the verified event calendar.');
+ set('roar-pool-status',!supported?'Waiting for verified ULTON event data':confirmed?'FINAL ALLOCATION VERIFIED · TEST ONLY':state.closed?(state.preview?'SIMULATION COMPLETE · NO CLAIMS':'EVENT CLOSED · FINAL SNAPSHOT PENDING'):'LIVE ESTIMATES · CLAIMS LOCKED UNTIL EVENT END');
+ set('roar-pool-caption',state.preview?'Pool-only time simulation, started 10 October. Ranking and boost still use the verified live test.':state.closed?'The simulated pool is fully released. Only the verified final Top 100 fixes each allocation.':'Released evenly over this event. Estimates follow the current rank and may change.');
  let amounts=null;
  if(supported&&odds&&current.ranking.length===100)try{amounts=allocateRewards(confirmed?state.total:state.emitted,odds)}catch{}
  for(const el of rewardCells){
   const pending=state.closed&&!confirmed,raw=amounts?.[el.rank-1];
   el.amount.textContent=raw===undefined||pending?'—':formatAmount(String(raw),18)+' ULTON';
   el.usd.textContent=raw===undefined||pending?'— USD':dollars(raw);
-  el.label.textContent=pending?'FINAL SNAPSHOT PENDING':confirmed?'FINAL · TEST ALLOCATION':'ESTIMATE · LOCKED';
+  el.label.textContent=pending?(state.preview?'PREVIEW COMPLETE':'FINAL SNAPSHOT PENDING'):confirmed?'FINAL · TEST ALLOCATION':'ESTIMATE · LOCKED';
  }
  const now=Math.floor(Date.now()/1000);
- if(current&&state.closed&&!confirmed&&!rewardBusy&&(!refreshFinalRewards.lastAttempt||now-refreshFinalRewards.lastAttempt>=60))refreshFinalRewards();
+ if(current&&!state.preview&&state.closed&&!confirmed&&!rewardBusy&&(!refreshFinalRewards.lastAttempt||now-refreshFinalRewards.lastAttempt>=60))refreshFinalRewards();
 }
 async function refreshFinalRewards(){
  if(!current||rewardBusy||finalReward?.eventStart===current.eventStart||Date.now()/1000<eventEnd(current.eventStart))return;
- const start=current.eventStart;if(start<1792368000)return;
+ const start=current.eventStart;if(start<1792368000||rewardPoolState(start,Math.floor(Date.now()/1000)).preview)return;
  rewardBusy=true;refreshFinalRewards.lastAttempt=Math.floor(Date.now()/1000);
  try{
   const response=await fetch('/api/roar/rewards?eventStart='+start,{cache:'no-cache',signal:AbortSignal.timeout(10000)});

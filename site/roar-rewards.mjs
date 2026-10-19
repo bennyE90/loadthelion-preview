@@ -21,6 +21,16 @@ export function poolState(start,now){
  const funded=start>=POOL_START,amount=funded?POOL_RAW:0n,emitted=amount*BigInt(elapsed)/BigInt(duration);
  return {start,end,funded,total:amount,emitted,remaining:amount-emitted,remainingPercent:100*(duration-elapsed)/duration,closed:now>=end};
 }
+// A visible pool-only preview for the current transition test. The underlying
+// verified event/ranks retain their real timestamps and cannot finalize this preview.
+export function rewardPoolState(start,now){
+ const state=poolState(start,now);
+ if(start!==POOL_START)return {...state,preview:false};
+ const previewStart=1791590400,previewEnd=1792454400; // 10–19 October, UTC.
+ const duration=previewEnd-previewStart,elapsed=Math.max(0,Math.min(duration,now-previewStart));
+ const emitted=POOL_RAW*BigInt(elapsed)/BigInt(duration);
+ return {...state,start:previewStart,end:previewEnd,preview:true,emitted,remaining:POOL_RAW-emitted,remainingPercent:100*(duration-elapsed)/duration,closed:now>=previewEnd};
+}
 export function verifyRewardFinal(payload,start,now){
  const end=eventEnd(start),s=payload?.snapshot;
  if(now<end||payload?.schema!==1||payload.status!=='FINAL'||payload.environment!=='ULTON_TEST'||payload.prizesEnabled!==false||payload.eventStart!==start||!/^[0-9a-f]{40}$/.test(payload.archiveCommit||'')||!/^[0-9a-f]{64}$/.test(payload.snapshotHash||''))throw Error('Final rewards not verified');
