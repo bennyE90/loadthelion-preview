@@ -7,8 +7,9 @@ approved integer probability weights, final UTC cutoff, deterministic plan and
 SHA-256 rejection-sampling result. Animation cannot request another seed or
 replace a result. A failed proof blocks playback. Replays show the same result.
 
-The wheel has 100 sectors sized by the original probabilities, not equal-sized
-sectors. The visible winner is only inserted after playback finishes. The API,
+The grid displays all 100 final wallets and their registered nicknames, with
+short wallet addresses as fallbacks. Tile sizes and animation visits are
+presentation only; selection keeps the original weighted probabilities. The visible winner is only inserted after playback finishes. The API,
 downloadable proof and on-chain records, when present, cannot be kept secret
 from someone who inspects them before the animation. This is a presentation
 reveal, not cryptographic secrecy.
