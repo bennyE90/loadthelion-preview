@@ -71,7 +71,7 @@ test('a reset exactly at midnight restarts at 0% rather than receiving simulated
  assert.throws(()=>previewRows(source,[{...reset,boostAtOpening:'true'}]));
 });
 
-test('minimum-buy preview keeps opening holders inactive and normalizes the archived opening baseline to zero',async()=>{
+test('partial minimum-buy history cannot masquerade as a complete nine-day simulation',async()=>{
  const data=fixture(),{opening,hash}=addOpening(data);
  const rows=data.full.allRanking.map((r,i)=>({...r,boostStartedAt:i===0?start+100:null,boostAtOpening:false}));
  const points=r=>BigInt(r.balanceRaw)*BigInt(r.boostStartedAt===null?518400:518400+2*(data.source.snapshotTimestamp-r.boostStartedAt));
@@ -80,9 +80,34 @@ test('minimum-buy preview keeps opening holders inactive and normalizes the arch
  data.full={...data.full,...data.source,schema:2,allRanking:rows,buyQualificationEvidence:[{privateEvidence:'server only'}]};
  data.index.events[0].snapshots.find(r=>r.kind==='current').hash=snapshotHash(data.full);
  const handler=createPreviewService({token:'test-token',now:()=>data.source.snapshotTimestamp*1000,fetcher:async url=>{const p=new URL(url).pathname;return Response.json(p.includes('/git/ref/')?{object:{sha:'a'.repeat(40)}}:p.endsWith('/latest.json')?data.source:p.endsWith('/index.json')?data.index:p.includes(hash)?opening:data.full)}});
+ const response=await handler(new Request('https://test.example/api/roar/preview'));assert.equal(response.status,503);assert.equal((await response.json()).status,'UNAVAILABLE');
+});
+
+function fullHistory(){
+ const data=fixture();
+ const rank=rows=>rows.map(r=>{const steps=r.boostStartedAt===null?0:Math.floor(Math.min(691200,start-r.boostStartedAt)*25000/691200);return {...r,points:BigInt(r.balanceRaw)*BigInt(10000+steps)}}).sort((a,b)=>a.points===b.points?a.address.localeCompare(b.address):a.points>b.points?-1:1).map(({points,...r},i)=>({...r,rank:i+1}));
+ const allRanking=rank(data.full.allRanking.map((r,i)=>({...r,boostStartedAt:i===0?PREVIEW_START+100:null,boostAtOpening:false})));
+ const block=data.source.snapshotBlock-1000,hash='0x'+'c'.repeat(64),boundary={block:{number:'0x'+block.toString(16),timestamp:'0x'+(start-1).toString(16),hash},nextBlock:{number:'0x'+(block+1).toString(16),timestamp:'0x'+start.toString(16),parentHash:hash},safeHead:data.source.snapshotBlock};
+ const openingBlock=block-10000,openingHash='0x'+'d'.repeat(64),openingBoundary={block:{number:'0x'+openingBlock.toString(16),timestamp:'0x'+(PREVIEW_START-1).toString(16),hash:openingHash},nextBlock:{number:'0x'+(openingBlock+1).toString(16),timestamp:'0x'+PREVIEW_START.toString(16),parentHash:openingHash},safeHead:data.source.snapshotBlock};
+ const simulation={schema:1,status:'HISTORICAL_SIMULATION_VERIFIED',start:PREVIEW_START,end:PREVIEW_END,historyFrom:PREVIEW_START,prizesEnabled:false,complete:true,balancesVerified:true,resetPolicy:'MIN_BUY_USD5_V1',minimumBuyUsd:'5.00',chainId:data.source.chainId,token:data.source.token,decimals:18,snapshotBlock:data.source.snapshotBlock,snapshotTimestamp:data.source.snapshotTimestamp,blockHash:data.source.blockHash,qualificationEvidenceHashes:['a'.repeat(64)],allRanking,openingBoundary,baseline:{comparisonTimestamp:start,snapshotBlock:block,snapshotTimestamp:start-1,allRanking,boundary}};
+ const simulationHash=snapshotHash(simulation);data.source={...data.source,resetPolicy:'MIN_BUY_USD5_V1',minimumBuyUsd:'5.00',simulationHash};data.full={...data.full,...data.source,schema:2};data.index.events[0].snapshots.find(r=>r.kind==='current').hash=snapshotHash(data.full);
+ return {...data,simulation,simulationHash};
+}
+test('complete historical preview retains verified 10 October purchases, real midnight boost and exact source balances',async()=>{
+ const data=fullHistory(),calls=[];
+ const handler=createPreviewService({token:'test-token',now:()=>data.source.snapshotTimestamp*1000,fetcher:async url=>{calls.push(url);const p=new URL(url).pathname;return Response.json(p.includes('/git/ref/')?{object:{sha:'a'.repeat(40)}}:p.endsWith('/latest.json')?data.source:p.endsWith('/index.json')?data.index:p.includes(data.simulationHash)?data.simulation:data.full)}});
  const response=await handler(new Request('https://test.example/api/roar/preview'));assert.equal(response.status,200);const payload=await response.json(),preview=verifyRoarPreview(payload);
- assert(preview.baseline);assert(preview.baseline.ranking.every(r=>r.boostPercent===0&&r.boostStartedAt===null));
- assert.equal(preview.ranking.find(r=>r.address===wallet(2)).boostPercent,0);assert.equal(preview.ranking.find(r=>r.address===wallet(1)).boostPercent,1.26);
- assert.equal(payload.source.buyQualificationEvidence,undefined);assert.equal(payload.baseline.source.buyQualificationEvidence,undefined);
- const falseOpening={...rows[0],boostAtOpening:true,boostStartedAt:start};assert.throws(()=>previewRows(data.source,[falseOpening]));
+ assert.equal(payload.schema,2);assert.equal(preview.ranking[0].boostStartedAt,PREVIEW_START+100);assert.equal(preview.ranking[0].boostPercent,250);assert.equal(preview.baseline.ranking[0].boostPercent,250);assert.equal(preview.ranking[1].boostPercent,0);
+ assert.equal(payload.allRanking,undefined);assert.equal(payload.qualificationEvidenceHashes,undefined);assert(calls.slice(1).every(u=>u.endsWith('?ref='+'a'.repeat(40))));
+ for(const alter of [p=>p.historyFrom=start,p=>p.historyComplete=false,p=>p.historyHash='b'.repeat(64),p=>p.ranking[0].sourceBoostStartedAt=PREVIEW_START-1,p=>p.ranking.reverse()]){const bad=structuredClone(payload);alter(bad);assert.throws(()=>verifyRoarPreview(bad));}
+ const bad=structuredClone(payload);bad.baseline.boundary.block.timestamp='0x'+start.toString(16);assert.equal(verifyRoarPreview(bad).baseline,null);
+});
+test('historical source hash, block binding and full wallet balance mismatches fail closed',async()=>{
+ for(const modify of [d=>d.simulation.snapshotBlock++,d=>d.simulation.allRanking[0].balanceRaw='2',d=>d.simulation.historyFrom=start]){
+  const data=fullHistory();modify(data);
+  // Bind the altered file hash so the model validation, not only transport hashing, must catch it.
+  data.simulationHash=snapshotHash(data.simulation);data.source.simulationHash=data.simulationHash;data.full.simulationHash=data.simulationHash;data.index.events[0].snapshots.find(r=>r.kind==='current').hash=snapshotHash(data.full);
+  const handler=createPreviewService({token:'test-token',now:()=>data.source.snapshotTimestamp*1000,fetcher:async url=>{const p=new URL(url).pathname;return Response.json(p.includes('/git/ref/')?{object:{sha:'a'.repeat(40)}}:p.endsWith('/latest.json')?data.source:p.endsWith('/index.json')?data.index:p.includes(data.simulationHash)?data.simulation:data.full)}});
+  assert.equal((await handler(new Request('https://test.example/api/roar/preview'))).status,503);
+ }
 });

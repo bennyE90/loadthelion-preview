@@ -2,7 +2,7 @@ import {snapshotHash,TOKEN} from './roar-relay.mjs';
 const API='https://api.github.com/repos/bennyE90/loadthelion-indexer';
 // Only the public Top 100 is returned to the browser. Credentials and the full
 // private ranking stay on the server. Every read is pinned to one archive commit.
-export function createArchiveReader({token,fetcher=fetch,now=()=>Date.now(),ttl=60000,withFull=false,withOpening=false}){
+export function createArchiveReader({token,fetcher=fetch,now=()=>Date.now(),ttl=60000,withFull=false,withOpening=false,withSimulation=false}){
  let cached=null,expires=0,pending=null;
  async function read(){
   if(typeof token!=='string'||!token)throw Error('Read-only archive connection not configured');
@@ -30,7 +30,9 @@ export function createArchiveReader({token,fetcher=fetch,now=()=>Date.now(),ttl=
     opening=candidate;openingHash=record.hash;
    }catch{/* Unavailable or altered baseline never creates movement arrows. */}
   }
-  cached={snapshot,...(withFull?{full}:{}),...(withOpening?{opening,openingHash}:{}),archive:{commit,eventId,snapshotHash:hash}};expires=now()+ttl;return cached;
+  let simulation=null;
+  if(withSimulation&&full.simulationHash){if(!/^[0-9a-f]{64}$/.test(full.simulationHash))throw Error('Invalid historical simulation reference');simulation=await contents('snapshots/'+full.simulationHash+'.json');if(snapshotHash(simulation)!==full.simulationHash)throw Error('Historical simulation hash mismatch');}
+  cached={snapshot,...(withSimulation?{simulation}:{}),...(withFull?{full}:{}),...(withOpening?{opening,openingHash}:{}),archive:{commit,eventId,snapshotHash:hash}};expires=now()+ttl;return cached;
  }
  return async()=>{
   if(cached&&now()<expires)return cached;

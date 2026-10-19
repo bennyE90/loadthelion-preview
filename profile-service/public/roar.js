@@ -3,7 +3,7 @@ import {createRoarFeed} from './roar-feed.mjs?v=20261019-calendar2';
 import {snapshotStatus} from './roar-status.mjs?v=20261019-calendar2';
 import {validatePrice,usdValue} from './roar-usd.mjs?v=20261017-usd1';
 import {rewardPoolState,allocateRewards,verifyRewardFinal,REWARD_TOKEN} from './roar-rewards.mjs?v=20261019-pfp25';
-import {verifyRoarPreview,PREVIEW_END} from './roar-preview.mjs?v=20261019-minbuy5-v1';
+import {verifyRoarPreview,PREVIEW_END} from './roar-preview.mjs?v=20261019-history10-v1';
 const feed=createRoarFeed();
 let marketQuote=null,priceBusy=false,priceFailed=false,valuationKey='';
 const root=document.getElementById('roar-rows'),more=document.getElementById('roar-show-more'),count=document.getElementById('roar-count'),status=document.getElementById('roar-data-status');
@@ -25,7 +25,7 @@ let rewardCells=[],finalReward=null,rewardBusy=false,preview=null;
 function cell(cls,text){const el=document.createElement('span');el.className=cls;el.textContent=text;return el}
 function render(snapshot,baseline){
  const simulated=preview&&snapshot?.snapshotBlock===preview.source.snapshotBlock;
- const legend=document.getElementById('roar-legend');if(simulated&&legend)legend.textContent='Simulated event: 10–19 October UTC. Everyone starts at 0%. A single $5+ buy activates boost; selling or transferring resets it and requires another $5+ buy. ROAR BOOST grows in +0.01% steps to +250.00% in eight days. Points and ranks use the latest verified balances. Arrows compare with 00:00 UTC.';else if(legend)legend.textContent='Points = token balance × (1 + ROAR BOOST / 100). '+(snapshot&&snapshot.eventStart<ACTIVATION?'This transition event uses the archived +200% / six-day boost rules. +250% over eight days starts on 21 Oct 2026.':'ROAR BOOST grows in +0.01 percentage-point steps from 0.00% to 250.00% over eight days.')+' Arrows compare positions with 00:00 UTC. Swipe horizontally to see every column.';
+ const legend=document.getElementById('roar-legend');if(simulated&&legend)legend.textContent='Simulated event: 10–19 October UTC. Verified purchase and transfer history starts on 10 October. Everyone starts at 0%. A single $5+ buy activates boost; selling or transferring resets it and requires another $5+ buy. ROAR BOOST grows in +0.01% steps to +250.00% in eight days. Points and ranks use the latest verified balances. Arrows compare with 00:00 UTC.';else if(legend)legend.textContent='Points = token balance × (1 + ROAR BOOST / 100). '+(snapshot&&snapshot.eventStart<ACTIVATION?'This transition event uses the archived +200% / six-day boost rules. +250% over eight days starts on 21 Oct 2026.':'ROAR BOOST grows in +0.01 percentage-point steps from 0.00% to 250.00% over eight days.')+' Arrows compare positions with 00:00 UTC. Swipe horizontally to see every column.';
  const rows=(simulated?preview.ranking:snapshot?.ranking)||Array.from({length:100},(_,i)=>({rank:i+1}));
  const changes=snapshot?(simulated?movements({...snapshot,ranking:preview.ranking},preview.baseline):movements(snapshot,baseline)):new Map();root.replaceChildren();rewardCells=[];
  for(const x of rows){
