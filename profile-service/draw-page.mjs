@@ -1,5 +1,5 @@
 import {verifyPublicDraw} from './draw-proof.mjs';
-import {participantName,revealFrame,chainReceiptUrl,publishedPrize,REVEAL_DURATION} from './draw-grid-model.mjs';
+import {participantName,revealFrame,winnerMessage,chainReceiptUrl,publishedPrize,REVEAL_DURATION} from './draw-grid-model.mjs';
 import {createDrawAudio} from './draw-audio.mjs';
 const $=id=>document.getElementById(id),cards=[],names=[],audio=createDrawAudio();
 let celebrationTimer,prizeUrl=null,sharedPrize=null,previewing=false,previewFocus=null,previewSerial=0;
@@ -46,7 +46,7 @@ function celebrate(reduced){
  celebrationTimer=setTimeout(()=>layer.replaceChildren(),3400);
 }
 function showWinner(reduced){
- $('draw-result-symbol').textContent='★';$('draw-result-title').textContent='ROOOOAR, YOU WON!';$('draw-result-message').textContent=names[verified.rank-1]+' · THE WINNER · TEST';$('draw-result').dataset.outcome='winner';$('draw-result').hidden=false;
+ $('draw-result-symbol').textContent='★';$('draw-result-title').textContent=winnerMessage(names[verified.rank-1]);$('draw-result-message').textContent=names[verified.rank-1]+' · THE WINNER · TEST';$('draw-result').dataset.outcome='winner';$('draw-result').hidden=false;
  document.querySelector('.reveal-stage').classList.add('personal-win');prize('draw');celebrate(reduced);audio.finish();
 }
 async function play(){
@@ -56,7 +56,7 @@ async function play(){
  const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches,duration=reduced?3000:REVEAL_DURATION;
  try{
   const audioReady=await music;$('draw-sound').dataset.ready=String(audioReady);
-  await new Promise(resolve=>{let start;function frame(now){if(start===undefined)start=now;const view=revealFrame(now-start,duration);audio.update(view.progress);$('draw-kicker').textContent=view.phase;if(view.done){resolve();return}if(!reduced&&view.index!==active){highlight(view.index);audio.tick(view.index);$('draw-title').textContent=names[view.index];$('draw-wallet').textContent=short(evidence.final.ranking[view.index].address)}requestAnimationFrame(frame)}requestAnimationFrame(frame)});
+  await new Promise(resolve=>{let start;function frame(now){if(start===undefined)start=now;const view=revealFrame(now-start,duration,verified.rank,parseInt(evidence.draw.randomness.slice(0,8),16));audio.update(view.progress);$('draw-kicker').textContent=view.phase;if(view.done){resolve();return}if(!reduced&&view.index!==active){highlight(view.index);audio.tick(view.index);$('draw-title').textContent=names[view.index];$('draw-wallet').textContent=short(evidence.final.ranking[view.index].address)}requestAnimationFrame(frame)}requestAnimationFrame(frame)});
   await visible();const row=evidence.final.ranking[verified.rank-1],name=names[verified.rank-1];highlight(verified.rank-1,true);
   $('draw-kicker').textContent='THE WINNER';$('draw-title').textContent=name;$('draw-wallet').textContent=row.address;$('draw-state').textContent='FINAL RANK #'+String(verified.rank).padStart(3,'0')+' · '+percent(evidence.probabilitiesPercent[verified.rank-1]);
   theater(false);document.querySelector('.reveal-stage').classList.add('finished');showWinner(reduced);$('draw-play').textContent='WATCH AGAIN';
@@ -71,7 +71,7 @@ $('draw-expand').addEventListener('click',()=>theater(true));$('draw-exit').addE
 async function preview(){
  if(playing||previewing)return;previewing=true;const serial=++previewSerial;previewFocus=document.activeElement;
  const ready=audio.start();$('draw-preview').hidden=false;$('draw-preview').dataset.outcome='winner';
- $('preview-title').textContent='ROOOOAR, YOU WON!';
+ $('preview-title').textContent=winnerMessage('THE LUCKY LION');
  $('preview-message').textContent='Un solo vincitore. Un unico grande ruggito per tutta la Pride.';
  prize('preview');
  $('preview-close').focus();await ready;if(!previewing||serial!==previewSerial)return;celebrate(matchMedia('(prefers-reduced-motion: reduce)').matches);audio.finish();

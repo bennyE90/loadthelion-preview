@@ -21,14 +21,14 @@ test('all viewers see the same verified winner and shared prize only after the f
   const p=await page(viewer);assert.equal(p.nodes.get('draw-candidates').children.length,100);assert.equal(p.nodes.get('draw-result').hidden,true);
   const playback=p.nodes.get('draw-play').listeners.click();await new Promise(r=>setImmediate(r));p.frames.shift()(0);p.frames.shift()(44999);assert.notEqual(p.nodes.get('draw-kicker').textContent,'THE WINNER');assert.equal(p.nodes.get('draw-result').hidden,true);
   p.frames.shift()(45000);await playback;assert.equal(p.nodes.get('draw-result').hidden,false);assert.equal(p.nodes.get('draw-result').dataset.outcome,'winner');assert.equal(p.nodes.get('draw-wallet').textContent,winner);assert.equal(p.nodes.get('draw-play').disabled,false);
-  assert.equal(p.nodes.get('draw-result-title').textContent,'ROOOOAR, YOU WON!');assert.equal(p.nodes.get('draw-prize').hidden,false);assert.equal(p.nodes.get('draw-prize-image').src,'assets/test-prize.webp');
+  assert.equal(p.nodes.get('draw-result-title').textContent,'ROOOOAR, 0x0000…0002, YOU WON!!! 🎉🎉🎉');assert.equal(p.nodes.get('draw-prize').hidden,false);assert.equal(p.nodes.get('draw-prize-image').src,'assets/test-prize.webp');
  }
 });
 
 test('creator winner preview leaves the verified draw unrevealed and finalist inspection works',async()=>{
  const p=await page(null);const original=p.nodes.get('draw-title').textContent;
  assert.equal(p.nodes.get('draw-studio').hidden,false);
- await p.nodes.get('preview-win').listeners.click();assert.equal(p.nodes.get('draw-preview').hidden,false);assert.equal(p.nodes.get('preview-title').textContent,'ROOOOAR, YOU WON!');assert.equal(p.nodes.get('draw-result').hidden,true);assert.equal(p.nodes.get('draw-title').textContent,original);
+ await p.nodes.get('preview-win').listeners.click();assert.equal(p.nodes.get('draw-preview').hidden,false);assert.equal(p.nodes.get('preview-title').textContent,'ROOOOAR, THE LUCKY LION, YOU WON!!! 🎉🎉🎉');assert.equal(p.nodes.get('draw-result').hidden,true);assert.equal(p.nodes.get('draw-title').textContent,original);
  p.nodes.get('preview-close').listeners.click();assert.equal(p.nodes.get('draw-preview').hidden,true);
  assert.equal(p.nodes.has('preview-loss'),false);assert.equal(p.nodes.has('draw-progress'),false);
  assert.equal(p.nodes.get('draw-atlas').children.length,100);p.nodes.get('draw-atlas').children[99].listeners.click();assert.match(p.nodes.get('draw-inspect').textContent,/#100/);

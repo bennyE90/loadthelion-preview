@@ -46,7 +46,9 @@ commitment exists.
 
 ## Shared celebration and prize image
 
-The 45-second presentation makes one ascending pass through ranks 1–100. It
+The 45-second presentation makes 3–5 ascending laps through ranks 1–100,
+wrapping 100 back to 1. A beacon-derived cosmetic lap count varies the travel;
+the last partial lap decelerates to the exact verified winner. It
 never chooses or changes the verified winner. Every viewer gets the same winner
 celebration; there is no loser screen or viewer-dependent result.
 
