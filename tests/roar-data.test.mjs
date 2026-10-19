@@ -12,3 +12,14 @@ test('large balances retain exact digits and point scaling',()=>{assert.equal(fo
 test('equal scores use the canonical lower-case address tie break',()=>{const row={balanceRaw:'1000',boostStartedAt:start};assert.equal(verifySnapshot(snapshot([{...row,address:a,rank:1},{...row,address:b,rank:2}])).ranking[0].address,a);assert.throws(()=>verifySnapshot(snapshot([{...row,address:b,rank:1},{...row,address:a,rank:2}])),/ordered/)});
 
 test('midnight resets the movement baseline independently of weekly boost',()=>{const row={rank:1,address:a,balanceRaw:'300',boostStartedAt:start};const current=verifySnapshot({...snapshot([row]),snapshotTimestamp:start+5*86400+86399});const baseline={...snapshot([{rank:1,address:a}]),snapshotTimestamp:start+5*86400,comparisonTimestamp:start+5*86400,snapshotBlock:90};assert.equal(movements(current,baseline).get(a).text,'—');const next=verifySnapshot({...current,snapshotTimestamp:start+6*86400});assert.equal(movements(next,baseline).size,0);assert(next.ranking[0].boostPercent>current.ranking[0].boostPercent)});
+
+test('Monday movements accept the last pre-midnight block bound to the new opening',()=>{
+ const current=verifySnapshot({...snapshot([{rank:1,address:a,balanceRaw:'300',boostStartedAt:start},{rank:2,address:b,balanceRaw:'100',boostStartedAt:start}]),snapshotTimestamp:start+3600});
+ const baseline={status:'verified',chainId:25,token,eventStart:start,comparisonTimestamp:start,snapshotTimestamp:start-1,snapshotBlock:99,ranking:[{rank:1,address:b},{rank:2,address:a}]};
+ assert.equal(movements(current,baseline).get(a).text,'↑1');
+ assert.equal(movements(current,baseline).get(b).text,'↓1');
+ assert.equal(movements(current,{...baseline,eventStart:start-604800}).size,0);
+ assert.equal(movements(current,{...baseline,snapshotTimestamp:start-86401}).size,0);
+ assert.equal(movements(current,{...baseline,comparisonTimestamp:start-86400}).size,0);
+ assert.equal(movements(current,{...baseline,snapshotBlock:101}).size,0);
+});
