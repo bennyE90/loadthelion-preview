@@ -64,7 +64,7 @@ loadOdds();refresh();setInterval(()=>{if(!document.hidden)refreshFinalRewards()}
 
 function updateStatus(){
  const result=snapshotStatus(current,feedState);
- if(preview&&current){result.mode=Date.now()/1000>=preview.end?'SIMULATED EVENT · CLOSED':'ULTON TEST · SIMULATED EVENT';result.text='Simulated boost, points and ranking · Source block '+current.snapshotBlock+' · '+new Date(current.snapshotTimestamp*1000).toISOString().replace('T',' ').slice(0,19)+' UTC · Scenario: 10–19 Oct';result.delayed=false}
+ if(preview&&current){result.mode=Date.now()/1000>=preview.end?'SIMULATED EVENT · CLOSED':'ULTON TEST · SIMULATED EVENT';result.text='Simulated boost, points and ranking · Source block '+current.snapshotBlock+' · '+new Date(current.snapshotTimestamp*1000).toISOString().replace('T',' ').slice(0,19)+' UTC · Snapshot age '+Math.max(0,Math.floor((Date.now()/1000-current.snapshotTimestamp)/60))+' min · Scenario: 10–19 Oct'}
  if(current&&finalReward?.eventStart===current.eventStart){result.mode='CLOSED · RESULTS VERIFIED';result.text='Final Top 100 verified · Block '+current.snapshotBlock+' · Simulated rewards allocation fixed · No real payouts';result.delayed=false}
  if(status){status.textContent=result.text;status.dataset.delayed=String(result.delayed)}
  return result;
