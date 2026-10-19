@@ -2,7 +2,7 @@ import {snapshotHash,TOKEN} from './roar-relay.mjs';
 const API='https://api.github.com/repos/bennyE90/loadthelion-indexer';
 // Only the public Top 100 is returned to the browser. Credentials and the full
 // private ranking stay on the server. Every read is pinned to one archive commit.
-export function createArchiveReader({token,fetcher=fetch,now=()=>Date.now(),ttl=60000}){
+export function createArchiveReader({token,fetcher=fetch,now=()=>Date.now(),ttl=60000,withFull=false}){
  let cached=null,expires=0,pending=null;
  async function read(){
   if(typeof token!=='string'||!token)throw Error('Read-only archive connection not configured');
@@ -20,7 +20,7 @@ export function createArchiveReader({token,fetcher=fetch,now=()=>Date.now(),ttl=
   if(snapshotHash(full)!==hash||full.eventId!==eventId||full.kind!=='current')throw Error('Full snapshot hash mismatch');
   const {allRanking,excludedAddresses,boundary,kind,eventId:unused,schema,...publicData}=full;
   if(snapshotHash({...publicData,schema:1})!==snapshotHash(snapshot))throw Error('Public snapshot differs from archive');
-  cached={snapshot,archive:{commit,eventId,snapshotHash:hash}};expires=now()+ttl;return cached;
+  cached={snapshot,...(withFull?{full}:{}),archive:{commit,eventId,snapshotHash:hash}};expires=now()+ttl;return cached;
  }
  return async()=>{
   if(cached&&now()<expires)return cached;

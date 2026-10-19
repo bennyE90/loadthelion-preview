@@ -49,3 +49,22 @@ archive endpoint are unchanged. This pool-only preview cannot finalize or
 claim anything using the actual event's different deadline. At the preview
 cutoff it stops at one million, hides unfinalized individual estimates and
 shows SIMULATION COMPLETE. Subsequent calendar events use normal pool timing.
+
+## Full visual event scenario
+
+The preview now recalculates boost, points and ranking for all eligible wallets
+from the pinned complete private current snapshot, returning only the simulated
+Top 100 alongside the original verified Top 100. Wallets active at the actual
+19 October opening are **assumed**, for this scenario, active from 10 October.
+Their boost reaches +250% after eight days. Activation times later than the
+real opening remain unchanged; inactive/reset wallets retain zero. This is an
+explicit scenario assumption, not a claim that historical 10–19 October token
+activity was reconstructed. The UI labels this simulated event and its rule.
+Actual archive history, balances, calendar policy and lottery result stay intact.
+The preview uses source snapshot time for scores; no extrapolated points or
+post-cutoff snapshot can finalize it. The simulation timer ends 19 October UTC.
+
+The pool panel now shows only a 0.00/100% → 100.00/100% release percentage and
+filling progressbar with accessible value text. Pool capital, emitted token
+sum, remaining balance and pool USD value are omitted. Individual estimated
+wallet rewards and their USD values remain alongside Lion Chance.

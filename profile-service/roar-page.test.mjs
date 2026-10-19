@@ -5,6 +5,7 @@ import vm from 'node:vm';
 import {buildSync} from 'esbuild';
 import {eventEnd} from '../site/roar-calendar.mjs';
 import {formatAmount} from '../site/roar-data.mjs';
+import {previewRows,PREVIEW_START,PREVIEW_END} from '../site/roar-preview.mjs';
 import {usdValue} from '../site/roar-usd.mjs';
 const script=buildSync({stdin:{contents:readFileSync(new URL('./public/roar.js',import.meta.url),'utf8').replace(/(\.mjs)\?v=[^']+/g,'$1'),resolveDir:new URL('../site/',import.meta.url).pathname,loader:'js'},bundle:true,format:'iife',write:false}).outputFiles[0].text;
 const snapshot=JSON.parse(readFileSync(new URL('./public/roar-snapshot.json',import.meta.url)));
@@ -16,7 +17,7 @@ class Element{
  addEventListener(name,fn){this.listeners[name]=fn}
  querySelectorAll(selector){return this.children.flatMap(el=>[...(selector==='.roar-usd'&&el.className==='roar-usd'?[el]:[]),...el.querySelectorAll(selector)])}
 }
-async function page({oddsFailure=false,offline=false,priceFailure=false,dataOverride=null,rewardsFinal=null,nowOverride=null}={}){
+async function page({oddsFailure=false,offline=false,priceFailure=false,dataOverride=null,rewardsFinal=null,nowOverride=null,previewPayload=null}={}){
  const data=dataOverride||snapshot;
  const nodes=new Map(),intervals=[],errors=[];let now=nowOverride??(eventEnd(data.eventStart)*1000-1000);
  const document={hidden:false,getElementById(id){if(!nodes.has(id))nodes.set(id,new Element());return nodes.get(id)},createElement(){return new Element()},addEventListener(){}};
@@ -25,6 +26,7 @@ async function page({oddsFailure=false,offline=false,priceFailure=false,dataOver
   if(url==='/api/roar/price')return priceFailure?new Response(null,{status:503}):Response.json({status:'ok',chainId:25,token:data.token,pair:'0xa3dc34f3c56157e35bd0e20d8800449dacdda2a5',currency:'USD',source:'DEX Screener',priceUsd:'0.00012345',observedAt:Math.floor(now/1000)});
   if(url.startsWith('probabilities'))return oddsFailure?new Response(null,{status:503}):Response.json(JSON.parse(readFileSync(new URL('../site/probabilities.json',import.meta.url))));
   if(url.startsWith('/api/roar/rewards?'))return Response.json(rewardsFinal||{status:'PENDING'});
+  if(url==='/api/roar/preview')return previewPayload?Response.json(previewPayload):new Response(null,{status:503});
   if(url==='/api/roar/snapshot'){if(offline)throw Error('offline');return Response.json(data)}
   if(url==='roar-snapshot.json')return Response.json(data);
   throw Error('Unexpected request '+url);
@@ -96,8 +98,8 @@ test('live rewards release alongside chance and remain pending at deadline, with
  assert.equal(row.children.length,7);assert.equal(row.children[5].textContent,'5.00%');
  assert.match(row.children[6].children[0].textContent,/ULTON/);assert.match(row.children[6].children[1].textContent,/≈ \$/);
  assert.equal(row.children[6].children[2].textContent,'ESTIMATE · LOCKED');
- assert.equal(p.nodes.get('roar-pool-total').textContent,'1,000,000 ULTON');
- p.advance(1000);assert.equal(p.nodes.get('roar-pool-remaining').textContent,'0 ULTON');
+ assert.match(p.nodes.get('roar-pool-percent').textContent,/99.99\/100%/);
+ p.advance(1000);assert.equal(p.nodes.get('roar-pool-percent').textContent,'100.00/100%');
  assert.equal(row.children[6].children[0].textContent,'—');assert.equal(row.children[6].children[2].textContent,'PREVIEW COMPLETE');
  assert.match(p.nodes.get('roar-pool-status').textContent,/SIMULATION COMPLETE/);
 });
@@ -114,4 +116,16 @@ test('only a verified final snapshot replaces the live ranking and fixes the sim
  const row=p.nodes.get('roar-rows').children[0];assert.equal(row.children[6].children[0].textContent,'50,000 ULTON');assert.equal(row.children[6].children[2].textContent,'FINAL · TEST ALLOCATION');
  assert.match(p.nodes.get('roar-pool-status').textContent,/FINAL ALLOCATION VERIFIED/);p.advance(0);assert.equal(p.nodes.get('roar-clock-mode').textContent,'CLOSED · RESULTS VERIFIED');
  p.intervals.find(i=>i.ms===300000).fn();await new Promise(resolve=>setImmediate(resolve));assert.equal(p.nodes.get('roar-rows').children[0],row);
+});
+
+test('live preview renders maximum boost, matching points/rank, the simulated deadline and a filling percentage-only pool',async()=>{
+ const start=1792368000,ranking=snapshot.ranking.map(r=>({...r,boostStartedAt:start})).sort((a,b)=>BigInt(a.balanceRaw)===BigInt(b.balanceRaw)?a.address.localeCompare(b.address):BigInt(a.balanceRaw)>BigInt(b.balanceRaw)?-1:1).map((r,i)=>({...r,rank:i+1}));
+ const data={...snapshot,eventStart:start,snapshotTimestamp:start+3600,ranking,dayStartSnapshot:undefined};
+ const payload={schema:1,status:'SIMULATED',prizesEnabled:false,start:PREVIEW_START,end:PREVIEW_END,source:data,ranking:previewRows(data,ranking).map(r=>({rank:r.rank,address:r.address,balanceRaw:r.balanceRaw,sourceBoostStartedAt:start}))};
+ const p=await page({dataOverride:data,previewPayload:payload,nowOverride:(start+4*3600)*1000});p.advance(0);const row=p.nodes.get('roar-rows').children[0];
+ assert.equal(row.children[3].children[0].textContent,'250.00%');assert.equal(row.children[4].textContent,formatAmount(BigInt(ranking[0].balanceRaw)*35000n,18,10000n));
+ assert.equal(p.nodes.get('roar-pool-percent').textContent,'91.66/100%');assert.equal(p.nodes.get('roar-pool-fill').style.width,'91.66%');assert.equal(p.nodes.get('roar-pool-meter').attributes['aria-valuenow'],'91.66');
+ assert.match(p.nodes.get('roar-clock-deadline').textContent,/19 OCT 2026/);assert.equal(p.nodes.get('roar-clock-mode').textContent,'ULTON TEST · SIMULATED EVENT');
+ assert.match(p.nodes.get('roar-legend').textContent,/Opening holders are assumed/);
+ const html=readFileSync(new URL('./public/roar.html',import.meta.url),'utf8');assert.match(html,/roar-page-title">TOP 100 <em>ROAR/);assert(!html.includes('id="roar-pool-total"'));assert(!html.includes('id="roar-pool-remaining"'));assert(!html.includes('id="roar-pool-emitted"'));
 });

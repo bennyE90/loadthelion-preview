@@ -2,7 +2,8 @@ import {BOOST_SECONDS,eventStart,eventEnd,ACTIVATION,movements,formatAmount,form
 import {createRoarFeed} from './roar-feed.mjs?v=20261019-calendar2';
 import {snapshotStatus} from './roar-status.mjs?v=20261019-calendar2';
 import {validatePrice,usdValue} from './roar-usd.mjs?v=20261017-usd1';
-import {rewardPoolState,allocateRewards,verifyRewardFinal,REWARD_TOKEN} from './roar-rewards.mjs?v=20261019-poolday9';
+import {rewardPoolState,allocateRewards,verifyRewardFinal,REWARD_TOKEN} from './roar-rewards.mjs?v=20261019-poolprogress1';
+import {verifyRoarPreview,PREVIEW_END} from './roar-preview.mjs?v=20261019-liveboost1';
 const feed=createRoarFeed();
 let marketQuote=null,priceBusy=false,priceFailed=false,valuationKey='';
 const root=document.getElementById('roar-rows'),more=document.getElementById('roar-show-more'),count=document.getElementById('roar-count'),status=document.getElementById('roar-data-status');
@@ -20,12 +21,13 @@ async function loadOdds(){
 const chanceFormat=new Intl.NumberFormat('en-US',{minimumFractionDigits:2,maximumFractionDigits:4});
 const less=document.getElementById('roar-show-less');
 let visible=10,current=null,busy=false,feedState='unavailable';
-let rewardCells=[],finalReward=null,rewardBusy=false;
+let rewardCells=[],finalReward=null,rewardBusy=false,preview=null;
 function cell(cls,text){const el=document.createElement('span');el.className=cls;el.textContent=text;return el}
 function render(snapshot,baseline){
- const legend=document.getElementById('roar-legend');if(legend)legend.textContent='Points = token balance × (1 + ROAR BOOST / 100). '+(snapshot&&snapshot.eventStart<ACTIVATION?'This transition event uses the archived +200% / six-day boost rules. +250% over eight days starts on 21 Oct 2026.':'ROAR BOOST grows in +0.01 percentage-point steps from 0.00% to 250.00% over eight days.')+' Arrows compare positions with 00:00 UTC. Swipe horizontally to see every column.';
- const rows=snapshot?.ranking||Array.from({length:100},(_,i)=>({rank:i+1}));
- const changes=snapshot?movements(snapshot,baseline):new Map();root.replaceChildren();rewardCells=[];
+ const simulated=preview&&snapshot?.snapshotBlock===preview.source.snapshotBlock;
+ const legend=document.getElementById('roar-legend');if(simulated&&legend)legend.textContent='Simulated event: 10–19 October UTC. Opening holders are assumed active from 10 October; later verified buys and resets keep their real timestamps. ROAR BOOST grows in +0.01% steps to +250.00% in eight days. Points and ranks use the latest verified balances.';else if(legend)legend.textContent='Points = token balance × (1 + ROAR BOOST / 100). '+(snapshot&&snapshot.eventStart<ACTIVATION?'This transition event uses the archived +200% / six-day boost rules. +250% over eight days starts on 21 Oct 2026.':'ROAR BOOST grows in +0.01 percentage-point steps from 0.00% to 250.00% over eight days.')+' Arrows compare positions with 00:00 UTC. Swipe horizontally to see every column.';
+ const rows=(simulated?preview.ranking:snapshot?.ranking)||Array.from({length:100},(_,i)=>({rank:i+1}));
+ const changes=snapshot&&!simulated?movements(snapshot,baseline):new Map();root.replaceChildren();rewardCells=[];
  for(const x of rows){
   const row=document.createElement('div');row.className='rank-row'+(x.rank<=10?' top-ten':'')+(x.rank<=3?' top-three':'');
   const rank=cell('rank '+(x.rank===1?'gold':x.rank===2?'silver':x.rank===3?'bronze':'red'),'#'+String(x.rank).padStart(3,'0'));
@@ -40,7 +42,7 @@ function render(snapshot,baseline){
  }
  show();valuationKey='';updateMarket();updateRewards();
 }
-function show(){const total=root.children.length;[...root.children].forEach((row,i)=>{row.hidden=i>=visible});count.textContent='Showing '+Math.min(visible,total)+' of '+total+(current?' verified ULTON test positions':' reserved positions · No live ranking');less.hidden=visible<=10;more.hidden=visible>=total;more.textContent='SHOW MORE · NEXT '+Math.min(10,Math.max(0,total-visible))}
+function show(){const total=root.children.length;[...root.children].forEach((row,i)=>{row.hidden=i>=visible});count.textContent='Showing '+Math.min(visible,total)+' of '+total+(current?(preview?' simulated ULTON test positions':' verified ULTON test positions'):' reserved positions · No live ranking');less.hidden=visible<=10;more.hidden=visible>=total;more.textContent='SHOW MORE · NEXT '+Math.min(10,Math.max(0,total-visible))}
 less.addEventListener('click',()=>{visible=10;show();const first=root.querySelector('.rank-row');first?.scrollIntoView({block:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});more.focus({preventScroll:true})});
 more.addEventListener('click',()=>{visible=Math.min(100,visible+10);show()});render(null,null);
 async function refresh(){
@@ -49,7 +51,11 @@ async function refresh(){
   const result=await feed.read(controller.signal),next=result.snapshot;
   feedState=result.state;
   if(!next){updateStatus();return}
-  if(finalReward?.eventStart!==next.eventStart&&(!current||next.snapshotTimestamp!==current.snapshotTimestamp||next.snapshotBlock!==current.snapshotBlock)){current=next;render(current,next.dayStartSnapshot)}
+  if(preview&&Date.now()/1000>=preview.end){updateStatus();return}
+  if(finalReward?.eventStart!==next.eventStart&&(!current||next.snapshotBlock>=current.snapshotBlock)&&( !current||next.snapshotTimestamp!==current.snapshotTimestamp||next.snapshotBlock!==current.snapshotBlock)){current=next;preview=null;render(current,next.dayStartSnapshot)}
+  if(next.eventStart===1792368000&&Math.floor(Date.now()/1000)<PREVIEW_END){
+   try{const response=await fetch('/api/roar/preview',{cache:'no-cache',signal:AbortSignal.timeout(10000)});if(!response.ok)throw Error('Preview unavailable');const candidate=verifyRoarPreview(await response.json());if(candidate.source.snapshotBlock>=current.snapshotBlock){preview=candidate;current=candidate.source;render(current,null)}}catch{/* Retain the verified base ranking when the simulation is unavailable. */}
+  }
   const eligible=document.getElementById('roar-eligible-count');if(eligible)eligible.textContent=String(next.eligibleWallets??next.ranking.length);
   updateStatus();refreshFinalRewards();
  }finally{clearTimeout(timer);busy=false}
@@ -58,13 +64,14 @@ loadOdds();refresh();setInterval(()=>{if(!document.hidden)refreshFinalRewards()}
 
 function updateStatus(){
  const result=snapshotStatus(current,feedState);
+ if(preview&&current){result.mode=Date.now()/1000>=preview.end?'SIMULATED EVENT · CLOSED':'ULTON TEST · SIMULATED EVENT';result.text='Simulated boost, points and ranking · Source block '+current.snapshotBlock+' · '+new Date(current.snapshotTimestamp*1000).toISOString().replace('T',' ').slice(0,19)+' UTC · Scenario: 10–19 Oct';result.delayed=false}
  if(current&&finalReward?.eventStart===current.eventStart){result.mode='CLOSED · RESULTS VERIFIED';result.text='Final Top 100 verified · Block '+current.snapshotBlock+' · Simulated rewards allocation fixed · No real payouts';result.delayed=false}
  if(status){status.textContent=result.text;status.dataset.delayed=String(result.delayed)}
  return result;
 }
 function updateCountdown(){
  updateMarket();updateRewards();
- const now=Math.floor(Date.now()/1000),start=current?current.eventStart:eventStart(now),end=eventEnd(start);
+ const now=Math.floor(Date.now()/1000),start=current?current.eventStart:eventStart(now),end=preview?preview.end:eventEnd(start);
  let remaining=Math.max(0,end-now);
  for(const [id,seconds] of [['roar-days',86400],['roar-hours',3600],['roar-minutes',60],['roar-seconds',1]]){const el=document.getElementById(id);if(el)el.textContent=String(Math.floor(remaining/seconds)).padStart(2,'0');remaining%=seconds}
  document.getElementById('roar-clock-mode').textContent=updateStatus().mode;
@@ -115,18 +122,16 @@ function updateRewards(){
  const supported=current?.token===REWARD_TOKEN&&current?.decimals===18&&state.funded;
  const set=(id,value)=>{const el=document.getElementById(id);if(el)el.textContent=value};
  let quote=null;try{quote=validatePrice(marketQuote)}catch{}
- const display=raw=>formatAmount(String(raw),18)+' ULTON';
  const dollars=raw=>quote?'≈ '+usdValue(String(raw),18,quote.priceUsd):'— USD';
- set('roar-pool-total',state.funded?display(state.total):'—');
- set('roar-pool-emitted',state.funded?display(state.emitted):'—');
- set('roar-pool-remaining',state.funded?display(state.remaining):'—');
- set('roar-pool-usd',state.funded?dollars(state.remaining):'— USD');
- const meter=document.getElementById('roar-pool-fill');if(meter)meter.style.width=state.remainingPercent+'%';
+ const progress=state.total?Number(state.emitted*10000n/state.total)/100:0;
+ set('roar-pool-percent',progress.toFixed(2)+'/100%');
+ const meter=document.getElementById('roar-pool-fill');if(meter)meter.style.width=progress+'%';
+ const progressbar=document.getElementById('roar-pool-meter');if(progressbar){progressbar.setAttribute('aria-valuenow',progress.toFixed(2));progressbar.setAttribute('aria-valuetext',progress.toFixed(2)+'% of the event pool released')}
  const confirmed=!state.preview&&finalReward?.eventStart===start;
  const remainingSeconds=Math.max(0,state.end-Math.floor(Date.now()/1000));
  set('roar-pool-timeline',state.preview?'SIMULATED EVENT · 10–19 OCT 2026 UTC · '+(state.closed?'PREVIEW COMPLETE':Math.floor(remainingSeconds/3600)+'H '+String(Math.floor(remainingSeconds%3600/60)).padStart(2,'0')+'M REMAINING'):'Rewards follow the verified event calendar.');
  set('roar-pool-status',!supported?'Waiting for verified ULTON event data':confirmed?'FINAL ALLOCATION VERIFIED · TEST ONLY':state.closed?(state.preview?'SIMULATION COMPLETE · NO CLAIMS':'EVENT CLOSED · FINAL SNAPSHOT PENDING'):'LIVE ESTIMATES · CLAIMS LOCKED UNTIL EVENT END');
- set('roar-pool-caption',state.preview?'Pool-only time simulation, started 10 October. Ranking and boost still use the verified live test.':state.closed?'The simulated pool is fully released. Only the verified final Top 100 fixes each allocation.':'Released evenly over this event. Estimates follow the current rank and may change.');
+ set('roar-pool-caption',state.preview?'Rewards unlock only after event closing and final snapshot verification. Live amounts remain estimates.':state.closed?'The simulated pool is fully released. Only the verified final Top 100 fixes each allocation.':'Released evenly over this event. Estimates follow the current rank and may change.');
  let amounts=null;
  if(supported&&odds&&current.ranking.length===100)try{amounts=allocateRewards(confirmed?state.total:state.emitted,odds)}catch{}
  for(const el of rewardCells){
