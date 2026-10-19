@@ -4,6 +4,7 @@ const projectId=process.env.REOWN_PROJECT_ID,origin=process.env.PROFILE_ORIGIN;
 if(!/^[a-f0-9]{32}$/i.test(projectId||''))throw Error('Configure REOWN_PROJECT_ID before building');
 if(!origin||new URL(origin).origin!==origin||!origin.startsWith('https://'))throw Error('Configure an exact HTTPS PROFILE_ORIGIN');
 await build({entryPoints:['profile-service/browser-entry.mjs'],bundle:true,format:'esm',platform:'browser',target:['es2022'],minify:true,outfile:'site/profile.js',legalComments:'eof'});
+await build({entryPoints:['profile-service/draw-page.mjs'],bundle:true,format:'esm',platform:'browser',target:['es2022'],minify:true,outfile:'site/draw.js',legalComments:'eof'});
 await writeFile('site/profile-config.json',JSON.stringify({projectId,origin}));
 
 await copyFile('profile-service/public/entry.html','site/index.html');
