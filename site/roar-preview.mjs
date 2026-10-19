@@ -1,6 +1,6 @@
 import {verifySnapshot,score} from './roar-data.mjs';
 import {POOL_START,REWARD_TOKEN} from './roar-rewards.mjs';
-export const PREVIEW_START=1791590400,PREVIEW_END=1792454400;
+export const PREVIEW_START=1791676800,PREVIEW_END=1792540800;
 // Scenario assumption: wallets active at the real opening are treated as active
 // at the simulated opening. Verified later buys/resets keep their actual times.
 export function previewRows(source,rows){

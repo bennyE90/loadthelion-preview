@@ -6,6 +6,11 @@ import {createPreviewService} from './roar-preview-service.mjs';
 import {snapshotHash} from './roar-relay.mjs';
 const base=JSON.parse(readFileSync(new URL('./public/roar-snapshot.json',import.meta.url)));
 const start=1792368000;
+test('current simulation opens 11 October UTC and closes at the final second of 20 October',()=>{
+ assert.equal(new Date(PREVIEW_START*1000).toISOString(),'2026-10-11T00:00:00.000Z');
+ assert.equal(new Date((PREVIEW_END-1)*1000).toISOString(),'2026-10-20T23:59:59.000Z');
+ assert.equal(PREVIEW_END-PREVIEW_START,864000);
+});
 const wallet=i=>'0x'+i.toString(16).padStart(40,'0');
 function fixture(){
  const rows=Array.from({length:105},(_,i)=>({rank:i+1,address:wallet(i+1),balanceRaw:String(1000-i),boostStartedAt:i<10?null:i===10?start+100:start}));
@@ -93,11 +98,11 @@ function fullHistory(){
  const simulationHash=snapshotHash(simulation);data.source={...data.source,resetPolicy:'MIN_BUY_USD5_V1',minimumBuyUsd:'5.00',simulationHash};data.full={...data.full,...data.source,schema:2};data.index.events[0].snapshots.find(r=>r.kind==='current').hash=snapshotHash(data.full);
  return {...data,simulation,simulationHash};
 }
-test('complete historical preview retains verified 10 October purchases, real midnight boost and exact source balances',async()=>{
+test('complete historical preview retains verified 11 October purchases, real midnight boost and exact source balances',async()=>{
  const data=fullHistory(),calls=[];
  const handler=createPreviewService({token:'test-token',now:()=>data.source.snapshotTimestamp*1000,fetcher:async url=>{calls.push(url);const p=new URL(url).pathname;return Response.json(p.includes('/git/ref/')?{object:{sha:'a'.repeat(40)}}:p.endsWith('/latest.json')?data.source:p.endsWith('/index.json')?data.index:p.includes(data.simulationHash)?data.simulation:data.full)}});
  const response=await handler(new Request('https://test.example/api/roar/preview'));assert.equal(response.status,200);const payload=await response.json(),preview=verifyRoarPreview(payload);
- assert.equal(payload.schema,2);assert.equal(preview.ranking[0].boostStartedAt,PREVIEW_START+100);assert.equal(preview.ranking[0].boostPercent,250);assert.equal(preview.baseline.ranking[0].boostPercent,250);assert.equal(preview.ranking[1].boostPercent,0);
+ assert.equal(payload.schema,2);assert.equal(preview.ranking[0].boostStartedAt,PREVIEW_START+100);assert.equal(preview.ranking[0].boostPercent,250);assert.equal(preview.baseline.ranking[0].boostPercent,249.96);assert.equal(preview.ranking[1].boostPercent,0);
  assert.equal(payload.allRanking,undefined);assert.equal(payload.qualificationEvidenceHashes,undefined);assert(calls.slice(1).every(u=>u.endsWith('?ref='+'a'.repeat(40))));
  for(const alter of [p=>p.historyFrom=start,p=>p.historyComplete=false,p=>p.historyHash='b'.repeat(64),p=>p.ranking[0].sourceBoostStartedAt=PREVIEW_START-1,p=>p.ranking.reverse()]){const bad=structuredClone(payload);alter(bad);assert.throws(()=>verifyRoarPreview(bad));}
  const bad=structuredClone(payload);bad.baseline.boundary.block.timestamp='0x'+start.toString(16);assert.equal(verifyRoarPreview(bad).baseline,null);

@@ -101,7 +101,7 @@ test('calendar leaderboard renders a 250.00% cap, exact 3.5x points and the true
 
 test('live rewards release alongside chance and remain pending at deadline, without a fabricated final payout',async()=>{
  const start=1792368000,ranking=snapshot.ranking.map(r=>({...r,boostStartedAt:null})).sort((a,b)=>BigInt(a.balanceRaw)===BigInt(b.balanceRaw)?a.address.localeCompare(b.address):BigInt(a.balanceRaw)>BigInt(b.balanceRaw)?-1:1).map((r,i)=>({...r,rank:i+1}));
- const p=await page({nowOverride:1792454400000-1000,dataOverride:{...snapshot,eventStart:start,eventEnd:eventEnd(start),snapshotTimestamp:start+3600,ranking,dayStartSnapshot:undefined}}),row=p.nodes.get('roar-rows').children[0];p.advance(0);
+ const p=await page({nowOverride:1792540800000-1000,dataOverride:{...snapshot,eventStart:start,eventEnd:eventEnd(start),snapshotTimestamp:start+3600,ranking,dayStartSnapshot:undefined}}),row=p.nodes.get('roar-rows').children[0];p.advance(0);
  assert.equal(row.children.length,8);assert.equal(row.children[6].textContent,'5.00%');
  assert.match(row.children[7].children[0].textContent,/ULTON/);assert.match(row.children[7].children[1].textContent,/≈ \$/);
  assert.equal(row.children[7].children[2].textContent,'ESTIMATED SHARE');
@@ -131,8 +131,8 @@ test('live preview renders maximum boost, matching points/rank, the simulated de
  const payload={schema:1,status:'SIMULATED',prizesEnabled:false,start:PREVIEW_START,end:PREVIEW_END,source:data,ranking:previewRows(data,ranking).map(r=>({rank:r.rank,address:r.address,balanceRaw:r.balanceRaw,sourceBoostStartedAt:start}))};
  const p=await page({dataOverride:data,previewPayload:payload,nowOverride:(start+4*3600)*1000});p.advance(0);const row=p.nodes.get('roar-rows').children[0];
  assert.equal(row.children[4].children[0].textContent,'250.00%');assert.equal(row.children[5].textContent,formatAmount(BigInt(ranking[0].balanceRaw)*35000n,18,10000n));
- assert.equal(p.nodes.get('roar-pool-percent').textContent,'91.66/100%');assert.equal(p.nodes.get('roar-pool-fill').style.width,'91.66%');assert.equal(p.nodes.get('roar-pool-meter').attributes['aria-valuenow'],'91.66');
- assert.match(p.nodes.get('roar-clock-deadline').textContent,/19 OCT 2026/);assert.equal(p.nodes.get('roar-clock-mode').textContent,'ULTON TEST · SIMULATED EVENT');
+ assert.equal(p.nodes.get('roar-pool-percent').textContent,'81.66/100%');assert.equal(p.nodes.get('roar-pool-fill').style.width,'81.66%');assert.equal(p.nodes.get('roar-pool-meter').attributes['aria-valuenow'],'81.66');
+ assert.match(p.nodes.get('roar-clock-deadline').textContent,/20 OCT 2026/);assert.equal(p.nodes.get('roar-clock-mode').textContent,'ULTON TEST · SIMULATED EVENT');
  assert.match(p.nodes.get('roar-legend').textContent,/Everyone starts at 0%/);
  const html=readFileSync(new URL('./public/roar.html',import.meta.url),'utf8');assert.match(html,/<h1 class="roar-sr-only">THE TOP 100 ROAR/);assert(!html.includes('id="roar-pool-total"'));assert(!html.includes('id="roar-pool-remaining"'));assert(!html.includes('id="roar-pool-emitted"'));
 });

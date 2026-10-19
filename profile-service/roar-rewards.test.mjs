@@ -58,7 +58,7 @@ test('reward endpoint rejects future, noncanonical and pre-simulation events',as
 });
 
 test('day-nine pool preview releases exactly 90% after nine days, preserves total and stops at the simulated deadline',()=>{
- const start=Date.parse('2026-10-10T00:00:00Z')/1000,end=Date.parse('2026-10-20T00:00:00Z')/1000;
+ const start=Date.parse('2026-10-11T00:00:00Z')/1000,end=Date.parse('2026-10-21T00:00:00Z')/1000;
  const preview=rewardPoolState(POOL_START,start+9*86400);
  assert.equal(preview.preview,true);assert.equal(preview.start,start);assert.equal(preview.end,end);assert.equal(preview.emitted,900000n*10n**18n);assert.equal(preview.remaining,100000n*10n**18n);
  assert.equal(allocateRewards(preview.emitted,odds)[0],45000n*10n**18n);

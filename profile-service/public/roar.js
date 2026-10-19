@@ -1,9 +1,9 @@
-import {BOOST_SECONDS,eventStart,eventEnd,ACTIVATION,movements,formatAmount,formatBoost} from './roar-data.mjs?v=20261019-calendar2';
-import {createRoarFeed} from './roar-feed.mjs?v=20261019-calendar2';
-import {snapshotStatus} from './roar-status.mjs?v=20261019-calendar2';
+import {BOOST_SECONDS,eventStart,eventEnd,ACTIVATION,movements,formatAmount,formatBoost} from './roar-data.mjs?v=20261019-calendar3';
+import {createRoarFeed} from './roar-feed.mjs?v=20261019-calendar3';
+import {snapshotStatus} from './roar-status.mjs?v=20261019-calendar3';
 import {validatePrice,usdValue} from './roar-usd.mjs?v=20261017-usd1';
-import {rewardPoolState,allocateRewards,verifyRewardFinal,REWARD_TOKEN} from './roar-rewards.mjs?v=20261019-pfp25';
-import {verifyRoarPreview,PREVIEW_END} from './roar-preview.mjs?v=20261019-history10-v1';
+import {rewardPoolState,allocateRewards,verifyRewardFinal,REWARD_TOKEN} from './roar-rewards.mjs?v=20261019-calendar3';
+import {verifyRoarPreview,PREVIEW_END} from './roar-preview.mjs?v=20261019-calendar3';
 const feed=createRoarFeed();
 let marketQuote=null,priceBusy=false,priceFailed=false,valuationKey='';
 const root=document.getElementById('roar-rows'),more=document.getElementById('roar-show-more'),count=document.getElementById('roar-count'),status=document.getElementById('roar-data-status');
@@ -25,7 +25,7 @@ let rewardCells=[],finalReward=null,rewardBusy=false,preview=null;
 function cell(cls,text){const el=document.createElement('span');el.className=cls;el.textContent=text;return el}
 function render(snapshot,baseline){
  const simulated=preview&&snapshot?.snapshotBlock===preview.source.snapshotBlock;
- const legend=document.getElementById('roar-legend');if(simulated&&legend)legend.textContent='Simulated event: 10–19 October UTC. Verified purchase and transfer history starts on 10 October. Everyone starts at 0%. A single $5+ buy activates boost; selling or transferring resets it and requires another $5+ buy. ROAR BOOST grows in +0.01% steps to +250.00% in eight days. Points and ranks use the latest verified balances. Arrows compare with 00:00 UTC.';else if(legend)legend.textContent='Points = token balance × (1 + ROAR BOOST / 100). '+(snapshot&&snapshot.eventStart<ACTIVATION?'This transition event uses the archived +200% / six-day boost rules. +250% over eight days starts on 21 Oct 2026.':'ROAR BOOST grows in +0.01 percentage-point steps from 0.00% to 250.00% over eight days.')+' Arrows compare positions with 00:00 UTC. Swipe horizontally to see every column.';
+ const legend=document.getElementById('roar-legend');if(simulated&&legend)legend.textContent='Simulated event: 11–20 October UTC. Verified purchase and transfer history starts on 11 October. Everyone starts at 0%. A single $5+ buy activates boost; selling or transferring resets it and requires another $5+ buy. ROAR BOOST grows in +0.01% steps to +250.00% in eight days. Points and ranks use the latest verified balances. Arrows compare with 00:00 UTC.';else if(legend)legend.textContent='Points = token balance × (1 + ROAR BOOST / 100). '+(snapshot&&snapshot.eventStart<ACTIVATION?'This transition event uses the archived +200% / six-day boost rules. +250% over eight days starts on 21 Oct 2026.':'ROAR BOOST grows in +0.01 percentage-point steps from 0.00% to 250.00% over eight days.')+' Arrows compare positions with 00:00 UTC. Swipe horizontally to see every column.';
  const rows=(simulated?preview.ranking:snapshot?.ranking)||Array.from({length:100},(_,i)=>({rank:i+1}));
  const changes=snapshot?(simulated?movements({...snapshot,ranking:preview.ranking},preview.baseline):movements(snapshot,baseline)):new Map();root.replaceChildren();rewardCells=[];
  for(const x of rows){
@@ -72,7 +72,7 @@ loadOdds();refresh();setInterval(()=>{if(!document.hidden)refreshFinalRewards()}
 
 function updateStatus(){
  const result=snapshotStatus(current,feedState);
- if(preview&&current){result.mode=Date.now()/1000>=preview.end?'SIMULATED EVENT · CLOSED':'ULTON TEST · SIMULATED EVENT';result.text='Simulated boost, points and ranking · Source block '+current.snapshotBlock+' · '+new Date(current.snapshotTimestamp*1000).toISOString().replace('T',' ').slice(0,19)+' UTC · Snapshot age '+Math.max(0,Math.floor((Date.now()/1000-current.snapshotTimestamp)/60))+' min · Scenario: 10–19 Oct'}
+ if(preview&&current){result.mode=Date.now()/1000>=preview.end?'SIMULATED EVENT · CLOSED':'ULTON TEST · SIMULATED EVENT';result.text='Simulated boost, points and ranking · Source block '+current.snapshotBlock+' · '+new Date(current.snapshotTimestamp*1000).toISOString().replace('T',' ').slice(0,19)+' UTC · Snapshot age '+Math.max(0,Math.floor((Date.now()/1000-current.snapshotTimestamp)/60))+' min · Scenario: 11–20 Oct'}
  if(current&&finalReward?.eventStart===current.eventStart){result.mode='CLOSED · RESULTS VERIFIED';result.text='Final Top 100 verified · Block '+current.snapshotBlock+' · Simulated rewards allocation fixed · No real payouts';result.delayed=false}
  if(status){status.textContent=result.text;status.dataset.delayed=String(result.delayed)}
  return result;
@@ -136,7 +136,7 @@ function updateRewards(){
  const progressbar=document.getElementById('roar-pool-meter');if(progressbar){progressbar.setAttribute('aria-valuenow',progress.toFixed(2));progressbar.setAttribute('aria-valuetext',progress.toFixed(2)+'% of the event pool released')}
  const confirmed=!state.preview&&finalReward?.eventStart===start;
  const remainingSeconds=Math.max(0,state.end-Math.floor(Date.now()/1000));
- set('roar-pool-timeline',state.preview?'10–19 OCT 2026 · UTC':'EVENT REWARDS · UTC');
+ set('roar-pool-timeline',state.preview?'11–20 OCT 2026 · UTC':'EVENT REWARDS · UTC');
  set('roar-pool-status',!supported?'Waiting for verified ULTON event data':confirmed?'FINAL ALLOCATION VERIFIED · TEST ONLY':state.closed?(state.preview?'SIMULATION COMPLETE · NO CLAIMS':'EVENT CLOSED · FINAL SNAPSHOT PENDING'):'RANK ESTIMATES · LOCKED');
  set('roar-pool-caption',state.preview?'Rewards unlock only after event closing and final snapshot verification. Live amounts remain estimates.':state.closed?'The simulated pool is fully released. Only the verified final Top 100 fixes each allocation.':'Released evenly over this event. Estimates follow the current rank and may change.');
  let amounts=null;

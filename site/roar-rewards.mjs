@@ -26,7 +26,7 @@ export function poolState(start,now){
 export function rewardPoolState(start,now){
  const state=poolState(start,now);
  if(start!==POOL_START)return {...state,preview:false};
- const previewStart=1791590400,previewEnd=1792454400; // 10–19 October, UTC.
+ const previewStart=1791676800,previewEnd=1792540800; // 11–20 October, UTC.
  const duration=previewEnd-previewStart,elapsed=Math.max(0,Math.min(duration,now-previewStart));
  const emitted=POOL_RAW*BigInt(elapsed)/BigInt(duration);
  return {...state,start:previewStart,end:previewEnd,preview:true,emitted,remaining:POOL_RAW-emitted,remainingPercent:100*(duration-elapsed)/duration,closed:now>=previewEnd};
