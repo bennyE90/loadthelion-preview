@@ -14,11 +14,24 @@ export function previewRows(source,rows){
   return {...r,boostStartedAt:since,boostPercent:steps/100,boostMaxPercent:250,pointsDenominator:10000,pointsNumerator:BigInt(r.balanceRaw)*BigInt(10000+steps)};
  }).sort((a,b)=>a.pointsNumerator===b.pointsNumerator?a.address.localeCompare(b.address):a.pointsNumerator>b.pointsNumerator?-1:1).map((r,i)=>({...r,rank:i+1}));
 }
+function verifiedRows(source,ranking){
+ if(!Array.isArray(ranking)||ranking.length!==100)throw Error('Incomplete simulation ranking');
+ const rows=previewRows(source,ranking.map(r=>({...r,boostStartedAt:r.sourceBoostStartedAt})));
+ if(rows.some((r,i)=>r.address!==ranking[i].address||ranking[i].rank!==i+1))throw Error('Invalid simulated ranking order');
+ return rows;
+}
+export function verifyPreviewBaseline(payload,current){
+ if(!payload||!/^[0-9a-f]{64}$/.test(payload.snapshotHash||''))throw Error('Missing verified midnight baseline');
+ const source=verifySnapshot(payload.source),day=Math.floor(current.snapshotTimestamp/86400)*86400;
+ if(source.eventStart!==current.eventStart||source.chainId!==current.chainId||source.token!==current.token||source.decimals!==current.decimals||source.snapshotTimestamp!==day||payload.comparisonTimestamp!==day||source.snapshotBlock>current.snapshotBlock||source.prizesEnabled!==false)throw Error('Wrong baseline day or event');
+ const b=payload.boundary,n=x=>Number(BigInt(x));
+ if(!b||n(b.block.number)!==source.snapshotBlock||b.block.hash!==source.blockHash||n(b.block.timestamp)>=day||n(b.block.timestamp)<day-86400||n(b.nextBlock.timestamp)<day||n(b.nextBlock.number)!==source.snapshotBlock+1||b.nextBlock.parentHash!==source.blockHash||n(b.safeHead)<n(b.nextBlock.number))throw Error('Unproven midnight boundary');
+ if(payload.ranking.some(r=>r.sourceBoostStartedAt!==source.eventStart))throw Error('Invalid opening boost state');
+ return {...source,comparisonTimestamp:day,snapshotTimestamp:n(b.block.timestamp),ranking:verifiedRows(source,payload.ranking)};
+}
 export function verifyRoarPreview(payload){
- if(payload?.schema!==1||payload.status!=='SIMULATED'||payload.prizesEnabled!==false||payload.start!==PREVIEW_START||payload.end!==PREVIEW_END||!Array.isArray(payload.ranking)||payload.ranking.length!==100)throw Error('Invalid simulation');
- const source=verifySnapshot(payload.source);
- const original=payload.ranking.map(r=>({...r,boostStartedAt:r.sourceBoostStartedAt}));
- const rows=previewRows(source,original);
- if(rows.some((r,i)=>r.address!==payload.ranking[i].address||payload.ranking[i].rank!==i+1))throw Error('Invalid simulated ranking order');
- return {source,ranking:rows,start:PREVIEW_START,end:PREVIEW_END};
+ if(payload?.schema!==1||payload.status!=='SIMULATED'||payload.prizesEnabled!==false||payload.start!==PREVIEW_START||payload.end!==PREVIEW_END)throw Error('Invalid simulation');
+ const source=verifySnapshot(payload.source),rows=verifiedRows(source,payload.ranking);
+ let baseline=null;try{baseline=verifyPreviewBaseline(payload.baseline,source)}catch{/* A missing or wrong baseline must not fabricate movements. */}
+ return {source,ranking:rows,baseline,start:PREVIEW_START,end:PREVIEW_END};
 }

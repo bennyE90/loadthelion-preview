@@ -150,3 +150,16 @@ test('25 positions open by default, both full-view controls expose all 100, and 
  p.nodes.get('roar-show-less').listeners.click();assert.equal(rows.filter(r=>!r.hidden).length,25);assert.equal(toggle.attributes['aria-expanded'],'false');p.nodes.get('roar-show-more').listeners.click();assert.equal(rows.filter(r=>!r.hidden).length,100);
  const html=readFileSync(new URL('./public/roar.html',import.meta.url),'utf8');assert(html.includes('<span>PFP</span>'));assert(html.includes('EVENT RULES &amp; LIVE DATA'));assert(!html.includes('THE FINAL ROAR · CLOSED EVENT REPLAY'));
 });
+
+test('simulated leaderboard displays green up and red down arrows against yesterday closing balances',async()=>{
+ const start=1792368000,ranking=snapshot.ranking.map(r=>({...r,boostStartedAt:start})).sort((a,b)=>BigInt(a.balanceRaw)===BigInt(b.balanceRaw)?a.address.localeCompare(b.address):BigInt(a.balanceRaw)>BigInt(b.balanceRaw)?-1:1).map((r,i)=>({...r,rank:i+1}));
+ const data={...snapshot,eventStart:start,snapshotTimestamp:start+3600,ranking,dayStartSnapshot:undefined};
+ const original=ranking.map((r,i)=>({...r,balanceRaw:i===0?ranking[1].balanceRaw:i===1?ranking[0].balanceRaw:r.balanceRaw})).sort((a,b)=>BigInt(a.balanceRaw)===BigInt(b.balanceRaw)?a.address.localeCompare(b.address):BigInt(a.balanceRaw)>BigInt(b.balanceRaw)?-1:1).map((r,i)=>({...r,rank:i+1}));
+ const block=data.snapshotBlock-1,blockHash='0x'+'d'.repeat(64),source={...data,snapshotTimestamp:start,snapshotBlock:block,blockHash,ranking:original,prizesEnabled:false};
+ const baseline={source,comparisonTimestamp:start,snapshotHash:'e'.repeat(64),ranking:previewRows(source,original).map(r=>({rank:r.rank,address:r.address,balanceRaw:r.balanceRaw,sourceBoostStartedAt:start})),boundary:{block:{number:block,timestamp:start-1,hash:blockHash},nextBlock:{number:block+1,timestamp:start,parentHash:blockHash},safeHead:data.snapshotBlock}};
+ const previewPayload={schema:1,status:'SIMULATED',prizesEnabled:false,start:PREVIEW_START,end:PREVIEW_END,source:data,ranking:previewRows(data,ranking).map(r=>({rank:r.rank,address:r.address,balanceRaw:r.balanceRaw,sourceBoostStartedAt:start})),baseline};
+ const p=await page({dataOverride:data,previewPayload,nowOverride:(start+4*3600)*1000}),rows=p.nodes.get('roar-rows').children;
+ assert.equal(rows[0].children[0].children[0].textContent,'↑1');assert.match(rows[0].children[0].children[0].className,/up/);
+ assert.equal(rows[1].children[0].children[0].textContent,'↓1');assert.match(rows[1].children[0].children[0].className,/down/);assert.equal(rows[2].children[0].children[0].textContent,'—');
+ p.nodes.get('roar-view-all').listeners.click();assert.equal(rows[0].children[0].children[0].textContent,'↑1');
+});

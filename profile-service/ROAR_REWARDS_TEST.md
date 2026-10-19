@@ -68,3 +68,16 @@ The pool panel now shows only a 0.00/100% → 100.00/100% release percentage and
 filling progressbar with accessible value text. Pool capital, emitted token
 sum, remaining balance and pool USD value are omitted. Individual estimated
 wallet rewards and their USD values remain alongside Lion Chance.
+
+## Daily movement in the simulated leaderboard
+
+The simulation compares against the immutable actual opening snapshot at
+00:00 UTC on 19 October, whose balances come from the last confirmed block
+of 18 October. Both full private holder sets are recalculated with the same
+10 October scenario before selecting each Top 100. The opening is fetched
+from the same pinned archive commit as the current snapshot, checked against
+its immutable hash, and its adjacent confirmed blocks must bracket midnight.
+Only the Top 100 baseline is returned to the browser. Missing, altered,
+post-midnight, wrong-day or wrong-event baselines leave arrows unavailable;
+they never create invented changes. Green/red numbers report positions
+relative to this fixed UTC baseline; NEW means outside its Top 100.

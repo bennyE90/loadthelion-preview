@@ -37,3 +37,28 @@ test('server simulation uses all eligible wallets, returns only the two Top 100 
  assert.equal(payload.ranking.length,100);assert.equal(payload.allRanking,undefined);assert.equal(payload.source.allRanking,undefined);assert.equal(payload.prizesEnabled,false);assert.equal(verifyRoarPreview(payload).ranking[0].boostPercent,250);assert(calls.slice(1).every(u=>u.endsWith('?ref='+'a'.repeat(40))));
  assert.equal((await handler(new Request('https://test.example/api/roar/preview',{method:'POST'}))).status,405);
 });
+function addOpening(data){
+ const original=data.full.allRanking.map(r=>({...r,boostStartedAt:start}));
+ const block=data.source.snapshotBlock-1000,blockHash='0x'+'c'.repeat(64);
+ const source={...data.source,snapshotTimestamp:start,snapshotBlock:block,blockHash,ranking:original.slice(0,100),prizesEnabled:false};
+ const boundary={block:{number:'0x'+block.toString(16),timestamp:'0x'+(start-1).toString(16),hash:blockHash},nextBlock:{number:'0x'+(block+1).toString(16),timestamp:'0x'+start.toString(16),parentHash:blockHash},safeHead:data.source.snapshotBlock};
+ const opening={...source,schema:2,kind:'opening',eventId:data.full.eventId,environment:'ULTON_TEST',allRanking:original,excludedAddresses:[],boundary};
+ const hash=snapshotHash(opening);data.index.events[0].snapshots.push({kind:'opening',at:start,block,hash});
+ return {opening,hash};
+}
+test('yesterday closing balances produce a fixed midnight simulation baseline with real up/down/NEW movements',async()=>{
+ const data=fixture(),{opening,hash}=addOpening(data);
+ const handler=createPreviewService({token:'test-token',now:()=>data.source.snapshotTimestamp*1000,fetcher:async url=>{const p=new URL(url).pathname;return Response.json(p.includes('/git/ref/')?{object:{sha:'a'.repeat(40)}}:p.endsWith('/latest.json')?data.source:p.endsWith('/index.json')?data.index:p.includes(hash)?opening:data.full)}});
+ const response=await handler(new Request('https://test.example/api/roar/preview'));assert.equal(response.status,200);const raw=await response.json(),preview=verifyRoarPreview(raw);
+ assert(preview.baseline);assert.equal(preview.baseline.snapshotTimestamp,start-1);assert.equal(preview.baseline.comparisonTimestamp,start);assert.equal(preview.baseline.ranking.length,100);assert.equal(raw.baseline.source.allRanking,undefined);
+ const {movements}=await import('../site/roar-data.mjs');const changes=movements({...preview.source,ranking:preview.ranking},preview.baseline);
+ assert.deepEqual(changes.get(wallet(12)),{type:'up',text:'↑11',label:'Up 11 positions since 00:00 UTC'});
+ assert.equal(changes.get(wallet(1)).type,'down');assert.equal(changes.get(wallet(105)).type,'new');
+ const baselineBefore=JSON.stringify(raw.baseline);await handler(new Request('https://test.example/api/roar/preview'));assert.equal(JSON.stringify(raw.baseline),baselineBefore);
+ for(const alter of [p=>{p.baseline.comparisonTimestamp-=86400},p=>{p.baseline.source.snapshotBlock=data.source.snapshotBlock+1},p=>{p.baseline.boundary.block.timestamp='0x'+start.toString(16)},p=>{p.baseline.ranking[0].sourceBoostStartedAt=null}]){const changed=structuredClone(raw);alter(changed);assert.equal(verifyRoarPreview(changed).baseline,null)}
+});
+test('tampered archived opening cannot invent arrows or prevent the current preview',async()=>{
+ const data=fixture(),{opening,hash}=addOpening(data);opening.allRanking[0].balanceRaw='1';
+ const handler=createPreviewService({token:'test-token',now:()=>data.source.snapshotTimestamp*1000,fetcher:async url=>{const p=new URL(url).pathname;return Response.json(p.includes('/git/ref/')?{object:{sha:'a'.repeat(40)}}:p.endsWith('/latest.json')?data.source:p.endsWith('/index.json')?data.index:p.includes(hash)?opening:data.full)}});
+ const response=await handler(new Request('https://test.example/api/roar/preview'));assert.equal(response.status,200);const preview=verifyRoarPreview(await response.json());assert.equal(preview.baseline,null);assert.equal(preview.ranking.length,100);
+});
