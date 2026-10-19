@@ -3,7 +3,7 @@ import {createRoarFeed} from './roar-feed.mjs?v=20261019-calendar2';
 import {snapshotStatus} from './roar-status.mjs?v=20261019-calendar2';
 import {validatePrice,usdValue} from './roar-usd.mjs?v=20261017-usd1';
 import {rewardPoolState,allocateRewards,verifyRewardFinal,REWARD_TOKEN} from './roar-rewards.mjs?v=20261019-pfp25';
-import {verifyRoarPreview,PREVIEW_END} from './roar-preview.mjs?v=20261019-midnight-arrows1';
+import {verifyRoarPreview,PREVIEW_END} from './roar-preview.mjs?v=20261019-autorestart1';
 const feed=createRoarFeed();
 let marketQuote=null,priceBusy=false,priceFailed=false,valuationKey='';
 const root=document.getElementById('roar-rows'),more=document.getElementById('roar-show-more'),count=document.getElementById('roar-count'),status=document.getElementById('roar-data-status');

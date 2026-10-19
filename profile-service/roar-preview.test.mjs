@@ -62,3 +62,11 @@ test('tampered archived opening cannot invent arrows or prevent the current prev
  const handler=createPreviewService({token:'test-token',now:()=>data.source.snapshotTimestamp*1000,fetcher:async url=>{const p=new URL(url).pathname;return Response.json(p.includes('/git/ref/')?{object:{sha:'a'.repeat(40)}}:p.endsWith('/latest.json')?data.source:p.endsWith('/index.json')?data.index:p.includes(hash)?opening:data.full)}});
  const response=await handler(new Request('https://test.example/api/roar/preview'));assert.equal(response.status,200);const preview=verifyRoarPreview(await response.json());assert.equal(preview.baseline,null);assert.equal(preview.ranking.length,100);
 });
+
+test('a reset exactly at midnight restarts at 0% rather than receiving simulated opening boost',()=>{
+ const {source}=fixture(),at={...source,snapshotTimestamp:start};
+ const reset={address:wallet(1),rank:1,balanceRaw:'100',boostStartedAt:start,boostAtOpening:false};
+ assert.equal(previewRows(at,[reset])[0].boostPercent,0);assert.equal(previewRows(at,[{...reset,boostAtOpening:true}])[0].boostPercent,250);
+ const later=previewRows({...source,snapshotTimestamp:start+3600},[{...reset,boostStartedAt:start+100}])[0];assert(later.boostPercent>0&&later.boostPercent<31.25);
+ assert.throws(()=>previewRows(source,[{...reset,boostAtOpening:'true'}]));
+});

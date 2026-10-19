@@ -8,7 +8,9 @@ export function previewRows(source,rows){
  const seen=new Set();
  return rows.map(r=>{
   if(!/^0x[0-9a-f]{40}$/.test(r.address)||seen.has(r.address))throw Error('Invalid preview wallet');seen.add(r.address);score(r,source.snapshotTimestamp,source.eventStart);
-  const since=r.boostStartedAt===source.eventStart?PREVIEW_START:r.boostStartedAt;
+  if(r.boostAtOpening!==undefined&&(typeof r.boostAtOpening!=='boolean'||r.boostAtOpening&&r.boostStartedAt!==source.eventStart))throw Error('Invalid opening activation marker');
+  const assumedOpening=r.boostAtOpening===true||r.boostAtOpening===undefined&&r.boostStartedAt===source.eventStart;
+  const since=assumedOpening?PREVIEW_START:r.boostStartedAt;
   const elapsed=since===null?0:Math.min(8*86400,Math.max(0,source.snapshotTimestamp-since));
   const steps=Math.floor(elapsed*25000/(8*86400));
   return {...r,boostStartedAt:since,boostPercent:steps/100,boostMaxPercent:250,pointsDenominator:10000,pointsNumerator:BigInt(r.balanceRaw)*BigInt(10000+steps)};
@@ -16,7 +18,7 @@ export function previewRows(source,rows){
 }
 function verifiedRows(source,ranking){
  if(!Array.isArray(ranking)||ranking.length!==100)throw Error('Incomplete simulation ranking');
- const rows=previewRows(source,ranking.map(r=>({...r,boostStartedAt:r.sourceBoostStartedAt})));
+ const rows=previewRows(source,ranking.map(r=>({...r,boostStartedAt:r.sourceBoostStartedAt,boostAtOpening:r.sourceBoostAtOpening})));
  if(rows.some((r,i)=>r.address!==ranking[i].address||ranking[i].rank!==i+1))throw Error('Invalid simulated ranking order');
  return rows;
 }
@@ -26,7 +28,7 @@ export function verifyPreviewBaseline(payload,current){
  if(source.eventStart!==current.eventStart||source.chainId!==current.chainId||source.token!==current.token||source.decimals!==current.decimals||source.snapshotTimestamp!==day||payload.comparisonTimestamp!==day||source.snapshotBlock>current.snapshotBlock||source.prizesEnabled!==false)throw Error('Wrong baseline day or event');
  const b=payload.boundary,n=x=>Number(BigInt(x));
  if(!b||n(b.block.number)!==source.snapshotBlock||b.block.hash!==source.blockHash||n(b.block.timestamp)>=day||n(b.block.timestamp)<day-86400||n(b.nextBlock.timestamp)<day||n(b.nextBlock.number)!==source.snapshotBlock+1||b.nextBlock.parentHash!==source.blockHash||n(b.safeHead)<n(b.nextBlock.number))throw Error('Unproven midnight boundary');
- if(payload.ranking.some(r=>r.sourceBoostStartedAt!==source.eventStart))throw Error('Invalid opening boost state');
+ if(payload.ranking.some(r=>r.sourceBoostStartedAt!==source.eventStart||r.sourceBoostAtOpening===false))throw Error('Invalid opening boost state');
  return {...source,comparisonTimestamp:day,snapshotTimestamp:n(b.block.timestamp),ranking:verifiedRows(source,payload.ranking)};
 }
 export function verifyRoarPreview(payload){

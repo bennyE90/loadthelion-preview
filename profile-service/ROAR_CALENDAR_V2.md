@@ -21,7 +21,9 @@ ranking is used. Display uses two decimal places, English formatting.
 Existing holders reset to zero boost at opening. A verified DEX purchase starts
 an inactive wallet; additional purchases preserve its start and apply its
 boost to the full received balance. A sale or outgoing contest-token transfer
-resets it. Ordinary incoming transfers cannot restart it. Zero-value token
+resets it and, from the 19 October transition test onward, immediately restarts
+it at the outgoing block timestamp on any remaining balance. Full exits stop
+accrual. Ordinary incoming transfers cannot restart an inactive wallet. Zero-value token
 transfers, approvals, native gas and transactions in other assets retain the
 existing treatment. All eligible wallets accrue boost, not just the Top 100.
 Daily movement arrows still reset at 00:00 UTC, independently of rounds.
@@ -36,3 +38,10 @@ Archive verification, the browser, countdown and future randomness plans share
 the UTC calendar. Plans remain tied to future signed randomness at least one
 hour after the actual close; no replacement seeds or changed weights are used.
 The canonical calendar module is copied byte-for-byte to the website.
+
+
+Restart policy version: AUTO_RESTART_REMAINING_V1 from event start
+19 October 2026 (1792368000). Earlier completed events preserve their original
+buy-to-restart reset semantics. New snapshots retain a boostAtOpening marker
+so an outgoing transfer exactly at midnight cannot receive simulated opening
+boost. The clock uses verified outgoing block time, never page load time.

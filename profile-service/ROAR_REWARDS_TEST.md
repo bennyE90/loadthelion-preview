@@ -81,3 +81,15 @@ Only the Top 100 baseline is returned to the browser. Missing, altered,
 post-midnight, wrong-day or wrong-event baselines leave arrows unavailable;
 they never create invented changes. Green/red numbers report positions
 relative to this fixed UTC baseline; NEW means outside its Top 100.
+
+
+## Automatic restart on remaining tokens
+
+From the active 19 October test, a positive outgoing contest-token transfer
+resets boost and immediately starts the clock again at that verified block
+if tokens remain. Full exit leaves an inactive wallet; ordinary incoming
+gifts cannot restart it. Added purchases preserve the restarted clock.
+Current source rows carry boostAtOpening to distinguish a real opening from
+a buy/outgoing transfer timestamped exactly at 00:00 UTC. The simulation only
+retrodates true opening activations; outgoing resets always keep their real
+timestamps. Historical closed snapshots and signed results remain unchanged.
