@@ -58,10 +58,9 @@ violet/cyan/red neon skyline through large windows, empty central floor for the
 live prizes and profiles, no lettering or logos. The gallery is confined to the
 prize section and crops responsively without covering the live UI.
 
-Current lighting uses three independent recessed LED ceiling modules, with beveled
-individual housings and the central module higher than both lateral modules. The old hanging fixture image is retained as an unused source asset. Light
-cones start at the ceiling and end at each NFT award area's bottom.
-
-Each independent LED housing is suspended by two metallic cables attached to the
-ceiling. Cones render in front of the housing, starting at the luminous lens
-centre (60% of module depth), and continue to the bottom of the NFT award area.
+Current lighting uses three independent LED lenses recessed into architectural
+ceiling coffers, extending from the ceiling plane to each housing; no cables or
+shared bar. The central module remains higher. The lens width and initial cone
+width use the identical --lens-half dimension, and both start at the same vertical
+lens centre. This remains matched across responsive sizes. The cone widens down
+to the end of the NFT award area. The old spotlight image is an unused source asset.
