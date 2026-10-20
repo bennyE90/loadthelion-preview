@@ -69,3 +69,12 @@ Each NFT award is displayed inside a decorative locked glass cabinet with a meda
 coloured metal frame, hinges, reflections and a keyhole. This is presentation only;
 no custody or prize delivery behaviour is attached to the case. Current leaders
 remain outside the glass and the spotlight follows the full cabinet height.
+
+Vitrines now stand on stone plinths holding the current leader information. Glass
+side/top panes add depth; a visible padlock closes each door. Inside the case only
+the prize name remains, on a small engraved-style serif plaque. Collection-example
+and test information remains in the shared note outside the cases.
+
+The original NFT art remains unchanged: it is presented as a subtly angled framed
+exhibit on a small internal rest, with contact shadows behind it and front-door
+glass reflections above it.
