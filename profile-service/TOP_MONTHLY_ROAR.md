@@ -58,8 +58,8 @@ violet/cyan/red neon skyline through large windows, empty central floor for the
 live prizes and profiles, no lettering or logos. The gallery is confined to the
 prize section and crops responsively without covering the live UI.
 
-Current lighting uses three independent LED lenses recessed into architectural
-ceiling coffers, extending from the ceiling plane to each housing; no cables or
+Current lighting uses three independent LED lenses positioned against the original
+gallery ceiling, without dark coffer overlays; no cables or
 shared bar. The central module remains higher. The lens width and initial cone
 width use the identical --lens-half dimension, and both start at the same vertical
 lens centre. This remains matched across responsive sizes. The cone widens down
