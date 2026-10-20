@@ -78,3 +78,8 @@ and test information remains in the shared note outside the cases.
 The original NFT art remains unchanged: it is presented as a subtly angled framed
 exhibit on a small internal rest, with contact shadows behind it and front-door
 glass reflections above it.
+
+Vitrines use deeper gold-edged side/top glass planes and a subtle three-dimensional
+view. Prize names use the bundled OFL Allura font as an unframed signature on glass.
+Each original NFT image rests on an internal futuristic stepped podium with a
+small LED strip; no NFT artwork is regenerated or replaced.
