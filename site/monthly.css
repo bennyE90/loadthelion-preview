@@ -100,3 +100,29 @@
 @media(max-width:750px){.nft-cabinet{--float-gap:7px}}
 @media(max-width:450px){.nft-cabinet{--float-gap:6px}}
 @media(prefers-reduced-motion:reduce){.prizes .prize .nft-cabinet .prize-art img,.prizes .prize .nft-cabinet .prize-art:after{animation:none}}
+
+/* Continuous gallery plinths and occasional collectible-card foil reflections. */
+.award-display{padding-bottom:0}
+.nft-cabinet{padding-bottom:0}
+.prizes .prize .nft-cabinet h2{min-height:0;max-width:none;white-space:nowrap;font:750 clamp(7px,1.65vw,13px)/1.4 system-ui,sans-serif;text-transform:uppercase;letter-spacing:.055em;padding:7px 3px;margin-bottom:10px}
+.prizes .prize .nft-cabinet h2 em{display:inline;font:inherit}
+.art-rest{bottom:-1px;height:calc(var(--stand-height) + 1px)}
+.prizes .prize .nft-cabinet .prize-art:after{background:linear-gradient(115deg,transparent 32%,#bbdcff08 39%,#ffffff8a 47%,#b9eeff45 51%,#e3b5f72b 55%,transparent 63%) -220% 0/250% 100% no-repeat;mix-blend-mode:screen;animation:exhibit-hover 5s ease-in-out infinite,collectible-shine 9s ease-in-out infinite}
+.second .prize-art:after{animation-delay:0s,2s!important}.third .prize-art:after{animation-delay:0s,4s!important}
+@keyframes collectible-shine{0%,66%{background-position:180% 0}84%,100%{background-position:-80% 0}}
+.cabinet-plinth,.gallery-stage .podium-step{width:calc(var(--art) + 30px);max-width:calc(100% - 8px);border:1px solid #b59a615c;border-radius:1px;background:linear-gradient(100deg,#35353b,#171c26 24%,#111720 72%,#32353d);box-shadow:inset 2px 0 #f0d28b20,inset -4px 0 #0004,6px 8px 12px #0007}
+.cabinet-plinth{margin-top:-1px;padding:16px 7px 12px}
+.cabinet-plinth:before{top:-5px;height:6px;clip-path:polygon(3% 0,97% 0,100% 100%,0 100%);background:linear-gradient(100deg,#786b4c,#c9b27b 40%,#504d43 90%)}
+.prizes .prize .cabinet-plinth .podium-holder{min-height:115px;padding:4px 0;justify-content:center;gap:0}
+.prizes .prize .podium-name{white-space:nowrap;overflow-wrap:normal;word-break:normal;font-size:clamp(12px,2.2vw,21px);line-height:1.3}
+.prizes .prize .podium-holder[data-empty=true] .podium-name{white-space:normal;overflow-wrap:anywhere}
+.prizes .prize .podium-net{white-space:nowrap;overflow-wrap:normal}
+.prizes .prize .podium-wallet{margin-top:5px;white-space:nowrap}
+.prizes .prize .podium-caption{margin-bottom:8px}
+.gallery-stage .podium-step{height:78px;margin-top:0;border-top:1px solid color-mix(in srgb,var(--medal) 55%,#3b3840);border-bottom:3px solid #8f784d66;background:radial-gradient(ellipse at 50% 15%,color-mix(in srgb,var(--medal) 12%,transparent),transparent 75%),linear-gradient(100deg,#35353b,#171c26 24%,#111720 72%,#32353d)}
+.gallery-stage .first .podium-step{height:95px}.gallery-stage .third .podium-step{height:65px}
+.podium-step:before{top:-1px;height:1px;clip-path:none;background:linear-gradient(90deg,transparent,var(--medal),transparent)}
+.award-icon{width:54px;height:54px;filter:drop-shadow(1px 2px 1px #0008);opacity:.9}
+@media(max-width:750px){.cabinet-plinth,.gallery-stage .podium-step{width:calc(var(--art) + 18px)}.cabinet-plinth{padding:12px 4px 10px}.prizes .prize .cabinet-plinth .podium-holder{min-height:103px}.gallery-stage .podium-step{height:60px}.gallery-stage .first .podium-step{height:72px}.gallery-stage .third .podium-step{height:50px}.award-icon{width:42px;height:42px}.prizes .prize .nft-cabinet h2{padding:5px 2px;margin-bottom:8px}}
+@media(max-width:450px){.cabinet-plinth,.gallery-stage .podium-step{width:calc(var(--art) + 14px)}.cabinet-plinth{padding:10px 3px 8px}.prizes .prize .cabinet-plinth .podium-holder{min-height:94px}.prizes .prize .podium-name{font-size:13px}.prizes .prize .podium-wallet{font-size:6.5px}.podium-net-label{margin-top:9px}.gallery-stage .podium-step{height:51px}.gallery-stage .first .podium-step{height:62px}.gallery-stage .third .podium-step{height:43px}.award-icon{width:35px;height:35px}}
+@media(prefers-reduced-motion:reduce){.prizes .prize .nft-cabinet .prize-art:after{animation:none!important;background:none}}
