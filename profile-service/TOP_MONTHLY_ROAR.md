@@ -43,3 +43,10 @@ labels collection previews and ULTON test status, not NFT ownership or delivery.
 Validation: monthly indexer scoring tests; site monthly endpoint and DOM tests;
 full existing site test suite, build, static references. Browser/physical Android
 QA is unavailable in this execution environment.
+
+Stage spotlight asset: site/assets/mane-city-spotlight.webp. Generated with the
+built-in image generation tool, then optimized to a transparent 320px WebP.
+Prompt: realistic suspended industrial moving-head LED spotlight for a Mane City
+neon metropolis NFT stage, graphite metal, violet/cyan reflections, warm-white
+underside lens, isolated transparent background, no text and no baked-in beam.
+Responsive CSS draws the cone down to the full award area.
