@@ -11,7 +11,7 @@ export function createMonthlyService({token,fetcher=fetch,now=()=>Date.now()}={}
   const raw=await get('/contents/monthly/latest.json?ref='+commit);verifyMonthly(raw,now());
   // Explicitly expose totals only, never private transaction evidence or credentials.
   const ranking=raw.ranking.slice(0,100).map(({rank,address,buysUsd,sellsUsd,outgoingUsd,netUsdMicros,reachedAt})=>({rank,address,buysUsd,sellsUsd,outgoingUsd,netUsdMicros,reachedAt}));
-  cached={schema:1,status:'VERIFIED',environment:'ULTON_TEST',chainId:25,token:MONTHLY_TOKEN,prizesEnabled:false,eventStart:raw.eventStart,eventEnd:raw.eventEnd,historyFrom:raw.historyFrom,complete:true,transactionPricesVerified:true,exclusionsVerified:true,snapshotTimestamp:raw.snapshotTimestamp,ranking,archiveCommit:commit};expires=now()+60000;return cached;
+  cached={schema:1,status:'VERIFIED',environment:'ULTON_TEST',chainId:25,token:MONTHLY_TOKEN,prizesEnabled:false,eventStart:raw.eventStart,eventEnd:raw.eventEnd,historyFrom:raw.historyFrom,...(raw.coverage?{coverage:raw.coverage,marketStart:raw.marketStart,marketBlock:raw.marketBlock,marketTransaction:raw.marketTransaction}:{}),complete:true,transactionPricesVerified:true,exclusionsVerified:true,snapshotTimestamp:raw.snapshotTimestamp,ranking,archiveCommit:commit};expires=now()+60000;return cached;
  }
  return async request=>{
   if(!['GET','HEAD'].includes(request.method))return Response.json({error:'Method not allowed'},{status:405,headers:{Allow:'GET, HEAD'}});

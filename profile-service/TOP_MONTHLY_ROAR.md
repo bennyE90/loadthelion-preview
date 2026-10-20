@@ -1,7 +1,9 @@
 # Top Monthly Roar — ULTON live test
 
 The dedicated monthly indexer workflow reconstructs the full UTC calendar month
-from confirmed ULTON transfer history. It authenticates the approved V2 pool and
+from confirmed ULTON transfer history. The initial October test starts at the
+authenticated first pool liquidity on 2026-10-09 13:23:05 UTC; later months use
+the complete calendar month. This coverage is explicit in the API and page. It authenticates the approved V2 pool and
 WCRO/USDC reference pool, checks receipt logs, verifies all reconstructed balances
 and excludes burn, project and contract addresses under the existing test policy.
 The test policy currently has no project wallet addresses configured.
@@ -26,7 +28,8 @@ pins monthly/latest.json to one private archive commit and exposes only public
 rank totals. Missing or inconsistent history cannot manufacture scores.
 
 Page: home.html#top-monthly-roar. Monthly leaderboard and podium hydrate nicknames
-from the same existing profile API. An unknown nickname falls back to the short
+from the existing profile store through a public nickname-only read endpoint.
+Wallet authentication remains unchanged. An unknown nickname falls back to the short
 wallet; late profile responses cannot overwrite a newer ranking. Delayed data is
 labelled and expires after one hour; wrong-month data is always rejected.
 
