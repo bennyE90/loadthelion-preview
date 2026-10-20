@@ -148,3 +148,9 @@
 .award-star{fill:color-mix(in srgb,var(--medal) 40%,#352717);stroke:#fff6;stroke-width:.65;filter:drop-shadow(0 1px 0 #fff5)}
 @media(max-width:750px){.case-lock{left:-4px;width:12px;height:17px}.prizes .prize .nft-cabinet .prize-art{margin-top:6px}}
 @media(max-width:450px){.case-lock{left:-3px;width:10px;height:15px}.prizes .prize .nft-cabinet .prize-art{margin-top:5px}}
+
+/* Keep hovering artwork clear of the nameplate; light fans out from the emitter. */
+.prizes .prize .nft-cabinet .prize-art{margin-top:15px}
+.prizes .prize .nft-cabinet .prize-art:before{left:4%;right:4%;clip-path:polygon(0 0,100% 0,80% 100%,20% 100%);background:radial-gradient(ellipse at 50% 100%,#d1faff80,transparent 58%),linear-gradient(90deg,transparent,#9deaff12 12%,#a5ebff38 50%,#9deaff12 88%,transparent);filter:blur(.65px);box-shadow:none;opacity:.85}
+@media(max-width:750px){.prizes .prize .nft-cabinet .prize-art{margin-top:12px}}
+@media(max-width:450px){.prizes .prize .nft-cabinet .prize-art{margin-top:11px}}
