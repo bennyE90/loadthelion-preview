@@ -1,40 +1,41 @@
-# Top Monthly Roar
+# Top Monthly Roar — ULTON live test
 
-Private ULTON preview, independent of Top 100 Roar. Planned podium: 1 Loaded Lion,
-1 Dark Lion, 1 Cyber Cub. No tickets or additional token pool. No prize transfer.
-Specific NFT IDs have not been supplied; the page does not invent NFT artwork.
+The dedicated monthly indexer workflow reconstructs the full UTC calendar month
+from confirmed ULTON transfer history. It authenticates the approved V2 pool and
+WCRO/USDC reference pool, checks receipt logs, verifies all reconstructed balances
+and excludes burn, project and contract addresses under the existing test policy.
+The test policy currently has no project wallet addresses configured.
 
-The page lives at `home.html#top-monthly-roar` or directly at `monthly.html`.
-Build copies templates from `profile-service/public/` and adds navigation and a
-full-height iframe using the existing header clearance and scroll-progress code.
+Buy USD uses attributed executed WCRO input. Sell and outgoing-transfer deductions
+use executed swap value when present, otherwise previous-block token-pool reserves.
+A first-liquidity deposit can use its own authenticated Sync reserves. WCRO/USD uses
+a fully historical 15-minute TWAP ending before the operation's quarter-hour bucket,
+with the explicit existing test convention 1 USDC = 1 USD. Values are integer USD
+millionths; sub-micro amounts round down. This is a test reference valuation.
 
-USD net buy = buys minus sells minus outgoing transfers, valued at each operation.
-Incoming gifts add nothing. Keep negatives; do not reset or clamp. Ignore native
-gas, approvals and unrelated tokens. Project-wallet exclusions must be verified.
-Periods are calendar months in UTC. Ties use earliest final-score reach, then
-canonical lowercase address. Only positive eligible scores qualify for prizes.
+Negative net buy persists; incoming gifts add no buying points. Reaching a wallet
+ends a buy route, preventing gifts from becoming purchases. Gas and approvals have
+no ULTON Transfer and do not alter scores. Month boundaries are exclusive at the
+next first day, UTC. Ties use first reach of final score then canonical address.
+Only positive net buys occupy the three planned prize positions.
 
-## Monthly data status
+The monthly workflow has its own queue and resumable RPC cache. Its archive commit
+preserves concurrent Top 100 changes with fast-forward retries. Weekly persistence
+preserves the newest monthly folder. No prize transfers are enabled. The backend
+pins monthly/latest.json to one private archive commit and exposes only public
+rank totals. Missing or inconsistent history cannot manufacture scores.
 
-Existing holder/boost snapshots do not contain complete monthly USD totals.
-The UI therefore shows AWAITING_HISTORY until the indexer supplies the dedicated
-`monthly/latest.json` on `roar-test-archive`. This change adds the page, exact
-score calculator, monthly validation and a same-origin archive relay. It does
-not yet implement historical pricing or monthly export in the indexer, certify
-winners or activate prizes. Do not substitute current token balances/current
-spot prices for transaction-time USD history.
+Page: home.html#top-monthly-roar. Monthly leaderboard and podium hydrate nicknames
+from the same existing profile API. An unknown nickname falls back to the short
+wallet; late profile responses cannot overwrite a newer ranking. Delayed data is
+labelled and expires after one hour; wrong-month data is always rejected.
 
-The export uses schema 1, status VERIFIED, environment ULTON_TEST, chainId 25,
-the pinned test token, prizesEnabled false, eventStart/eventEnd (exclusive),
-historyFrom = eventStart, complete/transactionPricesVerified/exclusionsVerified
-true, snapshotTimestamp, and a complete sorted ranking. Each row contains rank,
-lowercase address, buysUsd/sellsUsd/outgoingUsd decimal strings (up to six places),
-netUsdMicros (signed integer string), reachedAt (Unix seconds). The publisher must
-verify deduplication, DEX classification, transaction prices and exclusions before
-setting flags. The relay checks consistency and reads one pinned archive commit;
-its verification flags remain an indexer trust assumption, not independent proof.
-Only the first 100 rows' public totals reach the client. Missing, partial, stale,
-wrong-month or inconsistent exports hide the ranking. No final-winner service is
-implemented. An unavailable/closed month never implies a prize was distributed.
+Prizes: Loaded Lion, Dark Lion, Cyber Cub. Example artwork comes from the official
+Mane City NFT integration guide: https://learn.mane.city/desktop/gameplay/nft-integrations
+Build downloads and optimizes these collection examples when possible, with an
+explicit remote fallback. The actual prize NFT IDs are still unselected. The page
+labels collection previews and ULTON test status, not NFT ownership or delivery.
 
-Checks: `node --test profile-service/monthly.test.mjs`, build, static references.
+Validation: monthly indexer scoring tests; site monthly endpoint and DOM tests;
+full existing site test suite, build, static references. Browser/physical Android
+QA is unavailable in this execution environment.

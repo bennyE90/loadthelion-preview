@@ -1,4 +1,5 @@
 import {build} from 'esbuild';
+import {prepareMonthlyArt} from './monthly-assets.mjs';
 import {writeFile,copyFile,readFile,mkdir,readdir} from 'node:fs/promises';
 const projectId=process.env.REOWN_PROJECT_ID,origin=process.env.PROFILE_ORIGIN;
 if(!/^[a-f0-9]{32}$/i.test(projectId||''))throw Error('Configure REOWN_PROJECT_ID before building');
@@ -16,6 +17,7 @@ await copyFile('profile-service/public/roar.js','site/roar.js');
 await copyFile('profile-service/public/roar-snapshot.json','site/roar-snapshot.json');
 await copyFile('profile-service/public/dashboard.html','site/dashboard.html');
 for(const name of ['monthly.html','monthly.css','monthly.js'])await copyFile('profile-service/public/'+name,'site/'+name);
+await prepareMonthlyArt();
 await copyFile('profile-service/public/dashboard.css','site/dashboard.css');
 await copyFile('profile-service/public/tokenomics.html','site/tokenomics.html');
 await copyFile('profile-service/public/tokenomics.css','site/tokenomics.css');

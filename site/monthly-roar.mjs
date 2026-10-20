@@ -18,7 +18,7 @@ export function netBuy(buys,sells,outgoing){return usdMicros(buys)-usdMicros(sel
 // Only a complete, event-bound ULTON dataset can supply a ranking. No balance fallback.
 export function verifyMonthly(data,now=Date.now()){
  const window=monthWindow(now),seconds=Math.floor(now/1000);
- if(data?.schema!==1||data.status!=='VERIFIED'||data.environment!=='ULTON_TEST'||data.token!==MONTHLY_TOKEN||data.chainId!==25||data.prizesEnabled!==false||data.eventStart!==window.start||data.eventEnd!==window.end||data.historyFrom!==window.start||data.complete!==true||data.transactionPricesVerified!==true||data.exclusionsVerified!==true||!Number.isSafeInteger(data.snapshotTimestamp)||data.snapshotTimestamp<window.start||data.snapshotTimestamp>=window.end||data.snapshotTimestamp>seconds||seconds-data.snapshotTimestamp>900||!Array.isArray(data.ranking)||data.ranking.length>10000)throw Error('Monthly transaction history unavailable');
+ if(data?.schema!==1||data.status!=='VERIFIED'||data.environment!=='ULTON_TEST'||data.token!==MONTHLY_TOKEN||data.chainId!==25||data.prizesEnabled!==false||data.eventStart!==window.start||data.eventEnd!==window.end||data.historyFrom!==window.start||data.complete!==true||data.transactionPricesVerified!==true||data.exclusionsVerified!==true||!Number.isSafeInteger(data.snapshotTimestamp)||data.snapshotTimestamp<window.start||data.snapshotTimestamp>=window.end||data.snapshotTimestamp>seconds||seconds-data.snapshotTimestamp>3600||!Array.isArray(data.ranking)||data.ranking.length>10000)throw Error('Monthly transaction history unavailable');
  const seen=new Set();let previous=null;
  const ranking=data.ranking.map((r,index)=>{
   if(!/^0x[a-f0-9]{40}$/.test(r.address||'')||seen.has(r.address)||r.rank!==index+1)throw Error('Invalid monthly wallet');seen.add(r.address);
@@ -28,3 +28,6 @@ export function verifyMonthly(data,now=Date.now()){
   previous={net,reachedAt:r.reachedAt,address:r.address};return {...r,buys,sells,outgoing,net};
  });return {...data,ranking};
 }
+
+export function monthlyPodium(ranking){return [0,1,2].map(i=>{const r=ranking[i];return r&&r.net>0n?r:null})}
+export function monthlyName(address,profile){const name=profile?.nickname;return typeof name==='string'&&name.trim()&&name.trim().length<=48?name.trim():address.slice(0,6)+'…'+address.slice(-4)}
