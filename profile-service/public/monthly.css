@@ -96,7 +96,7 @@
 .prizes .prize .nft-cabinet .prize-art:after{bottom:calc(var(--stand-height) + var(--float-gap) + 2px);animation:exhibit-hover 5s ease-in-out infinite}
 .prizes .prize .nft-cabinet .prize-art:before{bottom:calc(var(--stand-height) - 3px);left:14%;right:14%;height:12px;z-index:0;background:radial-gradient(ellipse,#c2f4ff70,#85defb25 38%,transparent 72%);filter:blur(2px)}
 .art-rest{box-shadow:inset 0 1px #c7f0ee,inset 0 -3px #947233}
-@keyframes exhibit-hover{0%,100%{transform:translateY(0) rotateY(-3deg)}50%{transform:translateY(-3px) rotateY(-3deg)}}
+@keyframes exhibit-hover{0%,100%{transform:translateY(-1px) rotateY(-4deg) rotateZ(-.6deg)}50%{transform:translateY(-8px) rotateY(1deg) rotateZ(.6deg)}}
 @media(max-width:750px){.nft-cabinet{--float-gap:7px}}
 @media(max-width:450px){.nft-cabinet{--float-gap:6px}}
 @media(prefers-reduced-motion:reduce){.prizes .prize .nft-cabinet .prize-art img,.prizes .prize .nft-cabinet .prize-art:after{animation:none}}
