@@ -28,9 +28,10 @@ pins monthly/latest.json to one private archive commit and exposes only public
 rank totals. Missing or inconsistent history cannot manufacture scores.
 
 Page: home.html#top-monthly-roar. Monthly leaderboard and podium hydrate nicknames
-from the existing profile store through a public nickname-only read endpoint.
+from the existing profile store through public nickname/avatar read endpoints. Avatar reads return only the
+existing WebP image and respect profile removal.
 Wallet authentication remains unchanged. An unknown nickname falls back to the short
-wallet; late profile responses cannot overwrite a newer ranking. Delayed data is
+wallet; saved nicknames remain complete and wrap in the prize badges; late profile responses cannot overwrite a newer ranking. Delayed data is
 labelled and expires after one hour; wrong-month data is always rejected.
 
 Prizes: Loaded Lion, Dark Lion, Cyber Cub. Example artwork comes from the official
