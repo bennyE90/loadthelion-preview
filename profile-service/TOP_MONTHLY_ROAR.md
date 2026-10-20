@@ -92,3 +92,5 @@ padlock. Unneeded lower space and the previous lower signature are removed.
 The framed NFT floats a few pixels above the internal pedestal, with a soft cyan levitation halo and a slow 3px hover. Reduced-motion preferences keep the exhibit still.
 
 The internal stands now meet the cabinet floor. Uppercase gold nameplates and all live podium names stay on one line; names shrink to available width. Stone plinths use a continuous dark-metal finish and smaller inset award emblems. A periodic foil reflection crosses the floating artwork, disabled for reduced motion.
+
+Foil overlay explicitly uses rectangular corners to cover the entire artwork rather than inheriting the old circular glow shape. The levitation emitter is a shallow platform on the case floor, with a visible cyan field across the gap to the NFT.
