@@ -64,3 +64,8 @@ shared bar. The central module remains higher. The lens width and initial cone
 width use the identical --lens-half dimension, and both start at the same vertical
 lens centre. This remains matched across responsive sizes. The cone widens down
 to the end of the NFT award area. The old spotlight image is an unused source asset.
+
+Each NFT award is displayed inside a decorative locked glass cabinet with a medal-
+coloured metal frame, hinges, reflections and a keyhole. This is presentation only;
+no custody or prize delivery behaviour is attached to the case. Current leaders
+remain outside the glass and the spotlight follows the full cabinet height.
