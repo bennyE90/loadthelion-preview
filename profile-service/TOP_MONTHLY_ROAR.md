@@ -61,3 +61,7 @@ prize section and crops responsively without covering the live UI.
 Current lighting uses three independent recessed LED ceiling modules, with beveled
 individual housings and the central module higher than both lateral modules. The old hanging fixture image is retained as an unused source asset. Light
 cones start at the ceiling and end at each NFT award area's bottom.
+
+Each independent LED housing is suspended by two metallic cables attached to the
+ceiling. Cones render in front of the housing, starting at the luminous lens
+centre (60% of module depth), and continue to the bottom of the NFT award area.
