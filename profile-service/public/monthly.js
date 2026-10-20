@@ -15,3 +15,5 @@ for(const img of document.querySelectorAll('.prize-art img'))img.addEventListene
 byId('refresh').addEventListener('click',refresh);document.addEventListener('visibilitychange',()=>{if(!document.hidden){clock();refresh()}});clock();calculate();refresh();setInterval(clock,1000);setInterval(()=>{if(!document.hidden)refresh()},60000);
 
 if(typeof ResizeObserver!=='undefined'){const observer=new ResizeObserver(fitThirdName);for(let i=1;i<=3;i++)observer.observe(byId('podium-'+i))}if(document.fonts?.ready)document.fonts.ready.then(fitThirdName);
+
+for(const exhibit of document.querySelectorAll('.prize-art')){if(!exhibit.style?.setProperty)continue;const random=(min,max)=>min+Math.random()*(max-min);for(const [key,value] of Object.entries({'hover-duration':random(4.8,7.4)+'s','hover-delay':-random(0,7.4)+'s','hover-rise':-random(6,10)+'px','hover-turn':-random(2,5)+'deg','hover-tilt':-random(.3,.9)+'deg','hover-counter':random(.3,.9)+'deg','foil-duration':random(8,12)+'s','foil-delay':-random(0,12)+'s'}))exhibit.style.setProperty('--'+key,value)}
