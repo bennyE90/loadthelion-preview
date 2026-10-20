@@ -83,3 +83,8 @@ Vitrines use deeper gold-edged side/top glass planes and a subtle three-dimensio
 view. Prize names use the bundled OFL Allura font as an unframed signature on glass.
 Each original NFT image rests on an internal futuristic stepped podium with a
 small LED strip; no NFT artwork is regenerated or replaced.
+
+The compact case layout places a gold prize-name plaque above the NFT. Its slim
+frame rests on a continuous internal stem-and-foot pedestal reaching the glass
+floor. Hinges are on the right; the left closure carries a shaded, extruded gold
+padlock. Unneeded lower space and the previous lower signature are removed.
