@@ -58,6 +58,6 @@ violet/cyan/red neon skyline through large windows, empty central floor for the
 live prizes and profiles, no lettering or logos. The gallery is confined to the
 prize section and crops responsively without covering the live UI.
 
-Current lighting uses three code-rendered recessed LED arrays in a shared ceiling
-rail. The old hanging fixture image is retained as an unused source asset. Light
+Current lighting uses three independent recessed LED ceiling modules, with beveled
+individual housings and the central module higher than both lateral modules. The old hanging fixture image is retained as an unused source asset. Light
 cones start at the ceiling and end at each NFT award area's bottom.
