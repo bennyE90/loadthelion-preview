@@ -1,3 +1,4 @@
+import {createMonthlyService} from '../../profile-service/monthly-service.mjs';
 import {getStore} from '@netlify/blobs';
 import {createRoarRelay,strictBlobFetch} from '../../profile-service/roar-relay.mjs';
 import {createArchiveReader} from '../../profile-service/roar-archive-reader.mjs';
@@ -7,11 +8,13 @@ import {createRewardsService} from '../../profile-service/roar-rewards-service.m
 import {createPreviewService} from '../../profile-service/roar-preview-service.mjs';
 const priceService=createPriceService();
 const readToken=process.env.ROAR_ARCHIVE_READ_TOKEN;
+const monthlyService=createMonthlyService({token:readToken});
 const drawService=createDrawService({token:readToken});
 const rewardsService=createRewardsService({token:readToken});
 const previewService=createPreviewService({token:readToken});
 const archiveReader=readToken?createArchiveReader({token:readToken}):undefined;
 export default async function(request){
+ if(new URL(request.url).pathname==='/api/roar/monthly')return monthlyService(request);
  if(new URL(request.url).pathname==='/api/roar/preview')return previewService(request);
  if(new URL(request.url).pathname==='/api/roar/rewards')return rewardsService(request);
  if(new URL(request.url).pathname==='/api/roar/draw')return drawService(request);

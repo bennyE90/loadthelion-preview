@@ -15,6 +15,7 @@ await copyFile('profile-service/public/roar.html','site/roar.html');
 await copyFile('profile-service/public/roar.js','site/roar.js');
 await copyFile('profile-service/public/roar-snapshot.json','site/roar-snapshot.json');
 await copyFile('profile-service/public/dashboard.html','site/dashboard.html');
+for(const name of ['monthly.html','monthly.css','monthly.js'])await copyFile('profile-service/public/'+name,'site/'+name);
 await copyFile('profile-service/public/dashboard.css','site/dashboard.css');
 await copyFile('profile-service/public/tokenomics.html','site/tokenomics.html');
 await copyFile('profile-service/public/tokenomics.css','site/tokenomics.css');
@@ -54,6 +55,13 @@ home=home.replace(/<div class="v74-home-content">[\s\S]*?(?=<\/main>)/,homeConte
 const dashboardContent=await readFile('profile-service/public/dashboard-content.html','utf8');
 home=home.replace(/<style id="dashboard-home-monitor">[\s\S]*?<\/style>/g,'');
 home=home.replace(/<section aria-label="\$LOAD Dashboard"[\s\S]*?<\/section>/,dashboardContent);
+// Monthly page shares the shell and scroll-progress behavior of existing pages.
+home=home.replace(/<a[^>]*href="#top-monthly-roar"[^>]*>TOP MONTHLY ROAR<\/a>/g,'');
+home=home.replace('<a href="#security">SECURITY</a>','<a href="#top-monthly-roar">TOP MONTHLY ROAR</a><a href="#security">SECURITY</a>');
+home=home.replace(/<section id="top-monthly-roar"[\s\S]*?<\/section>/g,'');
+home=home.replace('</body>','<section id="top-monthly-roar" class="load-fullpage" aria-label="Top Monthly Roar"><iframe loading="lazy" src="monthly.html" title="Top Monthly Roar"></iframe></section></body>');
+home=home.replace(/<style id="monthly-shell">[\s\S]*?<\/style>/g,'');
+home=home.replace('</head>',`<style id="monthly-shell">#top-monthly-roar{display:none!important;position:fixed!important;inset:var(--load-header-clearance,107px) 0 0!important;z-index:100000!important;background:#080a12;overflow:hidden!important;padding:0!important;margin:0!important;height:auto!important}#top-monthly-roar:target{display:block!important}#top-monthly-roar iframe{width:100%!important;height:100%!important;display:block;border:0;touch-action:pan-y}body:has(#top-monthly-roar:target)>header.header{z-index:100002;position:fixed;inset:0 0 auto}body:has(#top-monthly-roar:target){overflow:hidden!important}body:has(#top-monthly-roar:target) #v118-replay{display:none!important}@media(min-width:1000px){.nav{gap:.45rem!important}.nav a{font-size:.58rem!important}}</style></head>`);
 await writeFile('site/home.html',home);
 let roar=await readFile('site/roar.html','utf8');
 roar=roar.replace('<p><a class="back" href="profile.html" target="_top">CONNECT WALLET · EDIT PROFILE</a></p>','');
