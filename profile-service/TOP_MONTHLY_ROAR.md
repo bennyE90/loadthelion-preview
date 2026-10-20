@@ -50,3 +50,10 @@ Prompt: realistic suspended industrial moving-head LED spotlight for a Mane City
 neon metropolis NFT stage, graphite metal, violet/cyan reflections, warm-white
 underside lens, isolated transparent background, no text and no baked-in beam.
 Responsive CSS draws the cone down to the full award area.
+
+Prize gallery background: site/assets/mane-city-gallery.webp, generated using the
+built-in image tool and optimized as an 1100px WebP. Prompt: prestigious Mane City
+nighttime exhibition gallery, obsidian and dark brushed metal, champagne-gold trim,
+violet/cyan/red neon skyline through large windows, empty central floor for the
+live prizes and profiles, no lettering or logos. The gallery is confined to the
+prize section and crops responsively without covering the live UI.
