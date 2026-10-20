@@ -139,3 +139,12 @@
 /* Independent, randomly seeded levitation per exhibit; its foil tracks the card. */
 .prizes .prize .nft-cabinet .prize-art img{animation-duration:var(--hover-duration,5s);animation-delay:var(--hover-delay,0s)}
 .prizes .prize .nft-cabinet .prize-art:after{animation-duration:var(--hover-duration,5s),var(--foil-duration,9s);animation-delay:var(--hover-delay,0s),var(--foil-delay,0s)}
+
+/* Flush brass key cylinders and sculpted metal award ornaments. */
+.case-lock{top:50%;left:-5px;width:15px;height:21px;transform:translateY(-50%);filter:drop-shadow(1px 1px 1px #0009)}
+.case-lock:before{content:none}
+.prizes .prize .nft-cabinet .prize-art{margin-top:8px}
+.award-icon{opacity:1;transform:perspective(300px) rotateY(-12deg) rotateX(3deg);filter:drop-shadow(3px 4px 2px #0009)}
+.award-star{fill:color-mix(in srgb,var(--medal) 40%,#352717);stroke:#fff6;stroke-width:.65;filter:drop-shadow(0 1px 0 #fff5)}
+@media(max-width:750px){.case-lock{left:-4px;width:12px;height:17px}.prizes .prize .nft-cabinet .prize-art{margin-top:6px}}
+@media(max-width:450px){.case-lock{left:-3px;width:10px;height:15px}.prizes .prize .nft-cabinet .prize-art{margin-top:5px}}
