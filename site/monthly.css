@@ -88,3 +88,15 @@
 .case-lock{top:48%;bottom:auto;left:-14px;right:auto;width:29px;height:38px;transform:translateY(-50%) rotate(-6deg);filter:drop-shadow(3px 4px 2px #0008);z-index:5}.case-lock:before{top:3px;left:10px;width:10px;height:16px;border:1px solid #bda773;border-radius:3px;background:linear-gradient(90deg,#483f32,#c3b086,#64513b);transform:rotate(6deg)}.case-lock svg{width:100%;height:100%;fill:none;filter:none}.case-hinge{left:auto;right:-5px}.hinge-top{top:24%}.hinge-bottom{bottom:20%}
 @media(max-width:750px){.nft-cabinet{--stand-height:34px;width:calc(var(--art) + 18px);max-width:calc(100% - 12px);padding:9px 7px 6px}.prizes .prize .nft-cabinet h2{font-size:21px;margin:0 0 8px;padding:3px 5px 2px}.prizes .prize .nft-cabinet .prize-art{padding:0 3px var(--stand-height)}.prizes .prize .nft-cabinet .prize-art:after{inset:2px 5px calc(var(--stand-height) + 2px)}.case-lock{left:-11px;right:auto;top:48%;bottom:auto;width:23px;height:31px}.case-lock:before{left:8px;top:3px;width:8px;height:12px}.case-hinge{left:auto;right:-3px}}
 @media(max-width:450px){.nft-cabinet{--stand-height:29px;width:calc(var(--art) + 14px);max-width:calc(100% - 10px);padding:7px 5px 5px}.prizes .prize .nft-cabinet h2{font-size:18px;margin:0 0 7px;padding:3px 4px 2px}.prizes .prize .nft-cabinet .prize-art{padding:0 2px var(--stand-height)}.case-lock{left:-9px;right:auto;top:48%;bottom:auto;width:20px;height:27px}.case-lock:before{left:7px;top:2px;width:7px;height:11px}.case-hinge{left:auto;right:-3px}.art-rest:after{bottom:2px}}
+
+/* A small levitation gap above the illuminated pedestal, inside the glass. */
+.nft-cabinet{--float-gap:10px}
+.prizes .prize .nft-cabinet .prize-art{padding-bottom:calc(var(--stand-height) + var(--float-gap))}
+.prizes .prize .nft-cabinet .prize-art img{animation:exhibit-hover 5s ease-in-out infinite;box-shadow:2px 1px 0 #141b28,4px 9px 12px #0008,0 5px 10px #98e8ff18}
+.prizes .prize .nft-cabinet .prize-art:after{bottom:calc(var(--stand-height) + var(--float-gap) + 2px);animation:exhibit-hover 5s ease-in-out infinite}
+.prizes .prize .nft-cabinet .prize-art:before{bottom:calc(var(--stand-height) - 3px);left:14%;right:14%;height:12px;z-index:0;background:radial-gradient(ellipse,#c2f4ff70,#85defb25 38%,transparent 72%);filter:blur(2px)}
+.art-rest{box-shadow:inset 0 1px #c7f0ee,inset 0 -3px #947233}
+@keyframes exhibit-hover{0%,100%{transform:translateY(0) rotateY(-3deg)}50%{transform:translateY(-3px) rotateY(-3deg)}}
+@media(max-width:750px){.nft-cabinet{--float-gap:7px}}
+@media(max-width:450px){.nft-cabinet{--float-gap:6px}}
+@media(prefers-reduced-motion:reduce){.prizes .prize .nft-cabinet .prize-art img,.prizes .prize .nft-cabinet .prize-art:after{animation:none}}

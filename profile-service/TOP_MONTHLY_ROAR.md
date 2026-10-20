@@ -88,3 +88,5 @@ The compact case layout places a gold prize-name plaque above the NFT. Its slim
 frame rests on a continuous internal stem-and-foot pedestal reaching the glass
 floor. Hinges are on the right; the left closure carries a shaded, extruded gold
 padlock. Unneeded lower space and the previous lower signature are removed.
+
+The framed NFT floats a few pixels above the internal pedestal, with a soft cyan levitation halo and a slow 3px hover. Reduced-motion preferences keep the exhibit still.
