@@ -9,14 +9,7 @@ const refs=new Set(['refs/heads/main','refs/heads/test-ulton-roar-boost']);
 const MAX_BODY=180000;
 const canonical=v=>v===null||typeof v!=='object'?JSON.stringify(v):Array.isArray(v)?'['+v.map(canonical).join(',')+']':'{'+Object.keys(v).sort().map(k=>JSON.stringify(k)+':'+canonical(v[k])).join(',')+'}';
 export const snapshotHash=v=>createHash('sha256').update(canonical(v)).digest('hex');
-// Blobs 11.1.4 treats non-412 conditional write failures as successful writes.
-// Reject those responses before the SDK can acknowledge a failed publication.
-export async function strictBlobFetch(input,init){
- const response=await fetch(input,init);
- const method=(init?.method||input?.method||'GET').toUpperCase();
- if(method==='PUT'&&!response.ok&&response.status!==412)throw Error('Blob write failed');
- return response;
-}
+export {strictBlobFetch} from './blob-store.mjs';
 let cachedKeys=null,keysExpire=0;
 async function githubKeys(){
  if(cachedKeys&&Date.now()<keysExpire)return cachedKeys;

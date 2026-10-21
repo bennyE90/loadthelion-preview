@@ -1,3 +1,4 @@
+import {fileURLToPath} from 'node:url';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
@@ -9,7 +10,7 @@ class Element{
  set className(v){this.classes=new Set(v.split(' '))}get className(){return [...this.classes].join(' ')}
  addEventListener(name,fn){this.listeners[name]=fn}append(...children){this.children.push(...children)}replaceChildren(...children){this.children=children}setAttribute(){}focus(){}
 }
-const script=(await build({entryPoints:[new URL('./draw-page.mjs',import.meta.url).pathname],bundle:true,format:'iife',write:false,plugins:[{name:'proof-tested-separately',setup(b){b.onLoad({filter:/draw-proof\.mjs$/},()=>({contents:'export async function verifyPublicDraw(p){return {rank:2,winner:p.draw.winner}}',loader:'js'}))}}]})).outputFiles[0].text;
+const script=(await build({entryPoints:[fileURLToPath(new URL('./draw-page.mjs',import.meta.url))],bundle:true,format:'iife',write:false,plugins:[{name:'proof-tested-separately',setup(b){b.onLoad({filter:/draw-proof\.mjs$/},()=>({contents:'export async function verifyPublicDraw(p){return {rank:2,winner:p.draw.winner}}',loader:'js'}))}}]})).outputFiles[0].text;
 async function page(viewer){const nodes=new Map(),frames=[];const document={hidden:false,getElementById(id){if(!nodes.has(id)){const e=new Element();if(id==='draw-result')e.hidden=true;nodes.set(id,e)}return nodes.get(id)},querySelector(){return this.getElementById('stage')},createElement(){return new Element()},addEventListener(){}};
  document.getElementById('draw-result');document.getElementById('draw-title');
  const ranking=Array.from({length:100},(_,i)=>({rank:i+1,address:a(i+1)}));

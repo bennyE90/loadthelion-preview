@@ -1,3 +1,4 @@
+import {fileURLToPath} from 'node:url';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {buildSync} from 'esbuild';
@@ -6,7 +7,7 @@ import {readFileSync} from 'node:fs';
 import {verifiedHolders} from '../site/market-holders.mjs';
 import {MARKET} from '../site/market-config.mjs';
 const holderSnapshot=JSON.parse(readFileSync(new URL('./public/roar-snapshot.json',import.meta.url)));
-const script=buildSync({entryPoints:[new URL('../site/dashboard.js',import.meta.url).pathname],bundle:true,format:'iife',write:false}).outputFiles[0].text;
+const script=buildSync({entryPoints:[fileURLToPath(new URL('../site/dashboard.js',import.meta.url))],bundle:true,format:'iife',write:false}).outputFiles[0].text;
 async function page({missing=false,offline=false,holderOffline=false}={}){
  let now=1792240763000;const nodes=new Map(),ticks=[];
  class Clock extends Date{constructor(...a){super(...(a.length?a:[now]))}static now(){return now}}
