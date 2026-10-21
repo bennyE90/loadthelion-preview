@@ -1,82 +1,150 @@
-# Cronos wallet profiles — integration branch, not live
+# Cronos wallet profiles — implementation and activation
 
-Purpose: optional nickname/avatar for each wallet, on Cronos EVM chain 25.
+Optional nickname/avatar profiles for wallets on Cronos EVM, chain 25.
 Crypto.com Onchain is the primary mobile acceptance target. WalletConnect pairing
-and the in-app injected EIP-1193 provider must both be tested on actual devices.
-No transaction, approval, permit, raw eth_sign or typed-data signing is requested.
-The connector requests only personal_sign. Account/network changes invalidate login.
+and the injected EIP-1193 provider require acceptance checks on actual devices.
+The connector requests `personal_sign` for sign-in; it does not request a
+transaction, token approval, permit, raw `eth_sign` or typed-data signature.
+Account/network changes invalidate login.
 
-## Implemented and tested
+This document describes the code in this branch. It does not certify a current
+deployment, provider plan, configured secret or completed mobile acceptance.
+The site's ULTON rankings and reward simulations are test features, separate
+from wallet-profile ownership and from any future $LOAD launch or real prize.
 
-- SIWE 3.0.0 verification against an exact HTTPS domain, URI, chain, statement,
-  server-issued message and 5-minute one-use challenge, bound to HttpOnly cookie.
-- Atomic nonce consumption rejects concurrent replay; server-side 30-minute sessions,
-  hashed opaque tokens, logout, exact-Origin CSRF protection and no cross-site CORS.
-- The session determines the edited wallet; request bodies cannot select another owner.
-- Unicode nickname validation, no markup; use textContent when displaying names.
-- Max 1 MB JPEG/PNG/WebP, bounded decoded pixels, 256px WebP re-encoding without metadata;
-  original uploads and SVG are not stored or served. Profile deletion removes the avatar.
-- SQLite must reside on a persistent, private volume. Do not place the DB in site/.
+## Implemented components
 
-## Run tests
+- `auth.mjs` provides the standalone SQLite implementation. `blob-profiles.mjs`
+  provides the Netlify Blobs implementation, with strong reads and ETag conditional
+  writes for one-use challenges and concurrent profile changes.
+- Both implement SIWE 3.0.0 verification against the exact HTTPS domain, URI,
+  chain and statement in a server-issued, five-minute challenge. Session tokens
+  are opaque, stored by hash and expire after 30 minutes. The verified session
+  determines the edited wallet; request bodies cannot select another owner.
+- The HTTP handlers use HttpOnly, Secure, SameSite=Strict cookies, reject
+  unexpected Origins on writes and do not enable cross-site credentialed CORS.
+- Nicknames are validated Unicode text. Avatars accept static JPEG/PNG/WebP up
+  to 1 MB, bound decoded pixels and re-encode to 256px WebP without metadata.
+  Original uploads and SVG are not served; deleting a profile removes its avatar.
+- `netlify/functions/profile.mjs` routes `/api/profile/*` through
+  `profile-handler.mjs` and the site-scoped `loadthelion-profiles-v1` store.
+  Its configuration declares 60 requests per 60 seconds, aggregated by IP/domain.
+  A missing `PROFILE_ORIGIN` produces a 503 response. Provider enforcement must
+  still be checked in the deployed environment.
+- `netlify/functions/profile-cleanup.mjs` declares daily cleanup at 03:17 UTC
+  for expired sessions/challenges. A schedule in source is not evidence of a
+  successful scheduled run.
+- `build.mjs` bundles the profile/wallet UI, copies public pages and appends
+  `leaderboard-profiles.mjs` to the generated ROAR script. Leaderboard hydration
+  uses batches of up to 100 public profiles; profile fields do not determine
+  score, rank, boost or chance. Wallet addresses remain available to the UI.
+- The wallet picker supports injected-provider discovery and WalletConnect
+  pairing. Connection/sign-in requires an explicit user action. Existing
+  automated pairing tests do not replace physical-device acceptance.
 
-Node 24. `npm ci --prefix profile-service` then
-`node --test profile-service/auth.test.mjs profile-service/wallet-discovery.test.mjs`.
-`PROFILE_ORIGIN=https://YOUR-EXACT-SITE-ORIGIN PROFILE_DB=/PRIVATE/PERSISTENT/profiles.sqlite node profile-service/server.mjs`
+## Install, test and build
 
-The service listens on loopback port 8787. Reverse-proxy `/api/profile/*` from the
-same HTTPS site origin; the browser never receives secrets or database access.
-Do not switch to insecure cookies or permissive CORS to accommodate GitHub Pages.
-The current static GitHub Pages host cannot execute this service.
+Run these commands from the repository root, `loadthelion-preview/`, using
+Node 24 or newer and npm:
 
-## Activation requirements and remaining work
+```sh
+npm ci
+npm run test:profiles
+npm test
+```
 
-1. Select/deploy a backend with persistent storage and an HTTPS same-origin proxy.
-   Existing Netlify account is a candidate, but this Node/SQLite process is NOT a
-   Netlify Function: adapt to that platform's transactional storage before deployment.
-2. Reown project LoadTheLion was created on 17 October 2026 on Starter.
-   https://bennye90.github.io is allowlisted. Set the generated Project ID in
-   deployment configuration. Allowlist the final backend/site origin when selected.
-3. Bundle profile-page.mjs (the initial editor and QR canvas are implemented). Finish
-   the mobile deep-link UI. The EIP-6963 picker now offers injected providers explicitly.
-   No automated wallet connection or signature on page load.
-4. Connect leaderboard names/avatars to the public profile endpoint; keep abbreviated
-   addresses visible. Score/rank/boost/chances never come from profile fields.
-5. Add global edge rate limiting/quotas, backups/deletion policy and HTTP integration
-   tests. The included per-process limiter is preliminary, not a distributed control.
-6. Test on real Android/iOS Crypto.com Onchain: pairing, readable SIWE signature,
-   cancellation, wrong chain, account change, disconnect and repeat login. Test smart
-   contract wallets separately: the initial verifier currently targets EOAs only.
+`npm ci` installs the root lockfile dependencies. The two test commands are
+alternatives for a focused profile-service run and the broader repository run;
+there is no need to run both after every documentation change. The profile-service
+selection includes `auth.test.mjs`, `blob-profiles.test.mjs` (including the HTTP
+handler checks), wallet discovery/pairing tests and the other current service
+tests. Report the current run's results rather than treating a past test count
+as fixed. These commands do not establish live provider or wallet readiness.
 
-No deployed UI or claim of production readiness is included. Do not publish a
-CONNECT WALLET button that silently stores profiles only in localStorage.
+Netlify uses `npm run build`, publishes `site/` and bundles `netlify/functions`
+with Node 24 as configured in `netlify.toml`. Set `REOWN_PROJECT_ID` to the real
+32-character hexadecimal project ID and `PROFILE_ORIGIN` to the exact HTTPS
+site origin, without a path or trailing slash. The origin must also match the
+service configuration and the project's allowed origins. A project ID is public
+client configuration, not a private key; the build checks its format, not its
+validity with Reown.
 
-## Observed deployment blocker (17 October 2026)
+The build writes files under `site/`, including bundles, pages and
+`profile-config.json`, and modifies the home page. Edit the corresponding sources
+under `profile-service/`, not generated output that a later build overwrites.
+`npm run test:build` also writes `site/`: it runs two builds and compares output.
+Its fallback values, and those in the Windows workstation's local build launcher,
+are a zero-filled project ID and `https://example.invalid`. They are for visual
+testing only; rebuild with the intended configuration before publication.
 
-The existing Netlify team is on operational credits: production deploys and Agent
-Runners are paused. The billing period shown is 16 October–15 November 2026.
-No paid plan was activated. Current GitHub Pages publication remains unchanged.
+## Standalone SQLite development path
 
-## Netlify deployment adapter (prepared 17 October 2026)
+`server.mjs` remains a separate Node HTTP server, not a Netlify Function. To use
+that path, set `PROFILE_ORIGIN` to the exact HTTPS site origin and `PROFILE_DB`
+to an absolute database path on a persistent private volume, then run
+`node profile-service/server.mjs` from the repository root. It creates/uses that
+database and listens on loopback port 8787 by default (`PORT` overrides the port).
+Do not put the database in `site/`.
 
-The Personal plan is now active and automatic recharge is disabled. The deployment
-adapter uses Netlify Blobs with strong reads and ETag conditional writes instead
-of process-local SQLite. Sessions/challenges are in private, site-scoped storage;
-only validated public nickname/avatar fields are exposed by the function. Nightly
-cleanup removes expired session/challenge objects. The function limits requests
-per IP/domain, validates exact Origin on writes, and never enables credentialed CORS.
+This development server does not implement `/api/profile/status` or
+`/api/profile/lookup`. The current `browser-entry.mjs`/`modal-entry.mjs` UI checks
+the status endpoint, and leaderboard hydration uses lookup. The standalone server
+is therefore not a complete replacement for the Netlify adapter with the current
+UI; those endpoint contracts would need to be aligned first.
 
-Netlify build: `npm run build` using Node 24, with `REOWN_PROJECT_ID` and
-`PROFILE_ORIGIN` configured in Netlify. The generated profile page/bundle/config
-and navigation links are added at build time; the existing GitHub Pages build
-is unchanged. The Project ID is public client configuration, not a private key.
+Reverse-proxy `/api/profile/*` from the same HTTPS site origin. For that setup, set
+`PROFILE_TRUSTED_PROXIES` to the exact proxy socket IPs, comma-separated (for example,
+`127.0.0.1,::1`). The proxy must overwrite `X-Forwarded-For` with one original
+client IP, never append or pass through a client-supplied value. Only explicitly
+trusted peers may provide this identity. Missing, invalid or multiple IP values
+from a trusted peer are rejected; untrusted forwarding headers are ignored.
+IPv6 spellings and IPv4-mapped IPv6 share their canonical client quota. Zone IDs,
+address/port pairs, CIDRs and wildcard trust are not accepted.
 
-Function `profile` serves `/api/profile/*`, with 60 requests/minute per IP/domain.
-Function `profile-cleanup` is scheduled nightly. Native image processing uses sharp.
-Only the verified address controls profile edits. JSON lookup batches up to 100
-public profiles so leaderboard hydration does not create one request per row.
+Without `PROFILE_TRUSTED_PROXIES`, the socket peer is the client identity; this
+default is for direct connections, not a multi-user proxy. Recognized API routes
+share 40 requests per minute per client; unknown routes do not consume that quota.
+Over-quota responses use HTTP 429 and `Retry-After` seconds. The limiter remains
+per-process, separate from any aggregate proxy/service cap and from the Netlify
+edge rate rule. The
+static GitHub Pages host cannot execute this service. The workstation's
+`setup/server.mjs` preview serves graphics/navigation only and does not run
+either profile backend. Do not weaken cookies or CORS to turn that preview
+into an authenticated service.
 
-Before activation, inspect the Netlify build log for function bundling and rate-rule
-validation; confirm private project visibility; verify status, rejected Origins,
-wallet cancellation, chain/account change, and a real Crypto.com Onchain sign-in.
-EOA wallets only initially; smart-contract-wallet signatures remain unverified.
+## Activation checks still distinct from implementation
+
+1. Verify the intended site's HTTPS origin, actual Reown project/allowlist and
+   provider configuration. Use the existing Netlify adapter when that is the
+   chosen deployment path; it does not require a new SQLite-to-Functions rewrite.
+2. Inspect the build/deploy result for function bundling, native `sharp` support,
+   rate-rule acceptance, configured visibility and persistent Blobs access.
+   Verify `/api/profile/status`, wrong-Origin rejection, session expiry, logout,
+   concurrent challenge reuse, nickname/avatar updates and deletion in that
+   environment. Local fixture tests are separate evidence.
+3. Check backups, retention/deletion procedures and observed cleanup runs.
+   The cleanup code removes expired authentication records; it is not a complete
+   backup or operational retention policy.
+4. On actual Android/iOS Crypto.com Onchain, check pairing, readable SIWE scope,
+   cancellation, wrong chain, account change, disconnect and repeat login.
+   Smart-contract-wallet signatures remain outside the initially supported
+   EOA verification path and require separate work/acceptance.
+5. Verify leaderboard profile lookup in the chosen environment. Keep the ULTON
+   test label and simulated/no-prize status; successful profile sign-in does
+   not activate real $LOAD rankings, funding, claims or prize transfers.
+
+Publishing or changing site visibility remains a separate authorized action.
+Do not present localStorage-only profile edits as a deployed profile service.
+
+## Historical setup notes — 17 October 2026
+
+The earlier notes recorded a Netlify operational-credit pause, with a billing
+period shown as 16 October–15 November and no paid plan active at that point.
+A later entry on the same date recorded the Personal plan as active, automatic
+recharge disabled and the Blobs adapter prepared. Those are successive historical
+observations, not a statement of today's plan, cost, limits or deploy availability.
+
+The same notes recorded creation of a Reown project named LoadTheLion on Starter
+and `https://bennye90.github.io` as an allowed origin. Recheck the actual current
+project and intended HTTPS origin before activation. Nothing in this document
+changes a provider plan, purchases a service or authorizes a new expense.

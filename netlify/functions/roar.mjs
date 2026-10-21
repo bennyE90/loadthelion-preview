@@ -1,6 +1,7 @@
 import {createMonthlyProfileReader,createMonthlyAvatarReader} from '../../profile-service/monthly-profile-reader.mjs';
 import {createMonthlyService} from '../../profile-service/monthly-service.mjs';
 import {getStore} from '@netlify/blobs';
+import {getProfileStore} from '../../profile-service/blob-store.mjs';
 import {createRoarRelay,strictBlobFetch} from '../../profile-service/roar-relay.mjs';
 import {createArchiveReader} from '../../profile-service/roar-archive-reader.mjs';
 import {createPriceService} from '../../profile-service/roar-price.mjs';
@@ -16,7 +17,7 @@ const previewService=createPreviewService({token:readToken});
 const archiveReader=readToken?createArchiveReader({token:readToken}):undefined;
 export default async function(request){
  if(['/api/roar/monthly-profiles','/api/roar/monthly-avatar'].includes(new URL(request.url).pathname)){
-  const profiles=getStore({name:'loadthelion-profiles-v1',consistency:'strong'});
+  const profiles=getProfileStore();
   const reader=new URL(request.url).pathname==='/api/roar/monthly-avatar'?createMonthlyAvatarReader:createMonthlyProfileReader;
   return reader({lookup:async address=>(await profiles.getWithMetadata('profiles/'+address,{type:'json'}))?.data})(request);
  }

@@ -7,6 +7,8 @@
   },
   "scripts": {
     "build": "node profile-service/build.mjs",
+    "test": "node --test profile-service/*.test.mjs tests/*.test.mjs",
+    "test:build": "node scripts/check_build.mjs",
     "test:profiles": "node --test profile-service/*.test.mjs"
   },
   "dependencies": {

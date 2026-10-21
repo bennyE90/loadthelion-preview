@@ -1,3 +1,4 @@
+import {fileURLToPath} from 'node:url';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
@@ -7,7 +8,7 @@ import {eventEnd} from '../site/roar-calendar.mjs';
 import {formatAmount} from '../site/roar-data.mjs';
 import {previewRows,PREVIEW_START,PREVIEW_END} from '../site/roar-preview.mjs';
 import {usdValue} from '../site/roar-usd.mjs';
-const script=buildSync({stdin:{contents:readFileSync(new URL('./public/roar.js',import.meta.url),'utf8').replace(/(\.mjs)\?v=[^']+/g,'$1'),resolveDir:new URL('../site/',import.meta.url).pathname,loader:'js'},bundle:true,format:'iife',write:false}).outputFiles[0].text;
+const script=buildSync({stdin:{contents:readFileSync(new URL('./public/roar.js',import.meta.url),'utf8').replace(/(\.mjs)\?v=[^']+/g,'$1'),resolveDir:fileURLToPath(new URL('../site/',import.meta.url)),loader:'js'},bundle:true,format:'iife',write:false}).outputFiles[0].text;
 const snapshot=JSON.parse(readFileSync(new URL('./public/roar-snapshot.json',import.meta.url)));
 class Element{
  children=[];style={};dataset={};listeners={};hidden=false;textContent='';

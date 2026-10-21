@@ -35,7 +35,7 @@ empty and redeploy after saving it. Untrusted deploys keep requiring approval.
 The reader pins latest/index/full ranking to one archive commit, verifies both
 content hashes and matching rankings, returns only the public Top 100 and reuses
 the same conditional publication guard. Refreshes are coalesced and cached for
-five minutes; stored fresh snapshots are reused for ten minutes. Source outages,
+60 seconds; stored fresh snapshots are reused for 60 seconds. Source outages,
 expired permissions or invalid data retain the last verified result. Without
 this connection the page explicitly displays its saved backup. OIDC does not
 bypass team login; do not change visibility or copy browser cookies to CI.
