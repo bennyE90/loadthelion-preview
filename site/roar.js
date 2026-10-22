@@ -59,16 +59,16 @@ async function refresh(){
   const result=await feed.read(controller.signal),next=result.snapshot;
   feedState=result.state;
   if(!next){updateStatus();return}
-  if(preview&&Date.now()/1000>=preview.end){updateStatus();return}
+  if(preview&&Date.now()/1000>=preview.end){preview=null;render(current,current?.dayStartSnapshot)}
   if(finalReward?.eventStart!==next.eventStart&&(!current||next.snapshotBlock>=current.snapshotBlock)&&( !current||next.snapshotTimestamp!==current.snapshotTimestamp||next.snapshotBlock!==current.snapshotBlock)){current=next;preview=null;render(current,next.dayStartSnapshot)}
   if(next.eventStart===1792368000&&Math.floor(Date.now()/1000)<PREVIEW_END){
    try{const response=await fetch('/api/roar/preview',{cache:'no-cache',signal:AbortSignal.timeout(10000)});if(!response.ok)throw Error('Preview unavailable');const candidate=verifyRoarPreview(await response.json());if(candidate.source.snapshotBlock>=current.snapshotBlock){preview=candidate;current=candidate.source;render(current,null)}}catch{/* Retain the verified base ranking when the simulation is unavailable. */}
   }
   const eligible=document.getElementById('roar-eligible-count');if(eligible)eligible.textContent=String(next.eligibleWallets??next.ranking.length);
   updateStatus();refreshFinalRewards();
- }finally{clearTimeout(timer);busy=false}
+ }catch{feedState='unavailable';updateStatus()}finally{clearTimeout(timer);busy=false}
 }
-loadOdds();refresh();setInterval(()=>{if(!document.hidden)refreshFinalRewards()},60000);setInterval(()=>{if(!document.hidden)refresh()},300000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh()});
+loadOdds();refresh();setInterval(()=>{if(!document.hidden)refreshFinalRewards()},60000);setInterval(()=>{if(!document.hidden)refresh()},60000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh()});
 
 function updateStatus(){
  const result=snapshotStatus(current,feedState);
