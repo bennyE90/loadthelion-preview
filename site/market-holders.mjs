@@ -1,0 +1,6 @@
+import {MARKET} from './market-config.mjs';
+export function verifiedHolders(data,now=Math.floor(Date.now()/1000)){
+ const audit=data?.audit,fields=['activeHolders','zeroBalanceAddresses','historicalWallets','eligiblePlainWallets','eligibleDelegatedWallets','excludedActiveContracts','excludedActiveBurnAddresses'];
+ if(data?.status!=='verified'||data.token!==MARKET.token||data.chainId!==MARKET.chainId||data.environment!==MARKET.environment||!['complete','balancesVerified','openingBalancesVerified','dexClassificationVerified'].every(k=>data[k]===true)||!Number.isSafeInteger(data.snapshotTimestamp)||data.snapshotTimestamp>now+120||!Number.isSafeInteger(data.snapshotBlock)||data.snapshotBlock<=0||!Number.isSafeInteger(data.eligibleWallets)||!audit||fields.some(k=>!Number.isSafeInteger(audit[k])||audit[k]<0)||audit.activeHolders+audit.zeroBalanceAddresses!==audit.historicalWallets||audit.eligiblePlainWallets+audit.eligibleDelegatedWallets!==data.eligibleWallets||data.eligibleWallets+audit.excludedActiveContracts+audit.excludedActiveBurnAddresses!==audit.activeHolders)throw Error('Unverified holder count');
+ return {count:audit.activeHolders,block:data.snapshotBlock,at:data.snapshotTimestamp};
+}

@@ -1,0 +1,78 @@
+import {build} from 'esbuild';
+import {prepareMonthlyArt} from './monthly-assets.mjs';
+import {writeFile,copyFile,readFile,mkdir,readdir} from 'node:fs/promises';
+const projectId=process.env.REOWN_PROJECT_ID,origin=process.env.PROFILE_ORIGIN;
+if(!/^[a-f0-9]{32}$/i.test(projectId||''))throw Error('Configure REOWN_PROJECT_ID before building');
+if(!origin||new URL(origin).origin!==origin||!origin.startsWith('https://'))throw Error('Configure an exact HTTPS PROFILE_ORIGIN');
+await build({entryPoints:['profile-service/browser-entry.mjs'],bundle:true,format:'esm',platform:'browser',target:['es2022'],minify:true,outfile:'site/profile.js',legalComments:'eof'});
+await build({entryPoints:['profile-service/draw-page.mjs'],bundle:true,format:'esm',platform:'browser',target:['es2022'],minify:true,outfile:'site/draw.js',legalComments:'eof'});
+await writeFile('site/profile-config.json',JSON.stringify({projectId,origin}));
+
+await copyFile('profile-service/public/entry.html','site/index.html');
+await copyFile('profile-service/public/profile.html','site/profile.html');
+await copyFile('profile-service/public/profile.css','site/profile.css');
+await copyFile('profile-service/public/settings.html','site/settings.html');
+await copyFile('profile-service/public/roar.html','site/roar.html');
+await copyFile('profile-service/public/roar.js','site/roar.js');
+await copyFile('profile-service/public/roar-snapshot.json','site/roar-snapshot.json');
+await copyFile('profile-service/public/dashboard.html','site/dashboard.html');
+for(const name of ['monthly.html','monthly.css','monthly.js'])await copyFile('profile-service/public/'+name,'site/'+name);
+await prepareMonthlyArt();
+await copyFile('profile-service/public/dashboard.css','site/dashboard.css');
+await copyFile('profile-service/public/tokenomics.html','site/tokenomics.html');
+await copyFile('profile-service/public/tokenomics.css','site/tokenomics.css');
+await copyFile('profile-service/public/load-identity-latin.woff','site/assets/load-identity-latin.woff');
+await copyFile('profile-service/public/IDENTITY-FONT-LICENSE.txt','site/assets/IDENTITY-FONT-LICENSE.txt');
+await writeFile('site/settings.css',(await readFile('profile-service/public/modal.css','utf8'))+'\n'+await readFile('profile-service/public/settings.css','utf8'));
+await mkdir('site/wallet-icons',{recursive:true});for(const name of await readdir('profile-service/public/wallet-icons'))await copyFile('profile-service/public/wallet-icons/'+name,'site/wallet-icons/'+name);
+await build({entryPoints:['profile-service/modal-entry.mjs'],bundle:true,format:'esm',platform:'browser',target:['es2022'],minify:true,outfile:'site/wallet-modal.js',legalComments:'eof'});
+const {createHash}=await import('node:crypto');
+const digest=createHash('sha256').update(await readFile('site/wallet-modal.js')).digest('base64');
+const css=await readFile('profile-service/public/modal.css','utf8');
+let home=await readFile('site/home.html','utf8');
+const streetFont=home.match(/@font-face\{font-family:'LOAD Street';src:url\(data:font\/ttf;base64,([A-Za-z0-9+/=]+)\)/);
+if(!streetFont)throw Error('Home street font not found');
+await writeFile('site/assets/load-street.ttf',Buffer.from(streetFont[1],'base64'));
+
+home=home.replaceAll('assets/03c8549b61bca52abb.png','assets/loadthelion-official-logo.webp');
+home=home.replaceAll('BACK TO THE PENTHOUSE','BACK TO HOME').replaceAll('LOADTHELION // THE PENTHOUSE','LOADTHELION // HOME');
+const brandCss=await readFile('profile-service/public/brand-home.css','utf8');
+home=home.replace(/<style id="brand-home-refresh">[\s\S]*?<\/style>/g,'').replace('</head>',`<style id="brand-home-refresh">${brandCss}</style></head>`);
+home=home.replace(/<a class="nav-profile-link"[^>]*>CONNECT WALLET<\/a>/g,'').replace(/<button class="nav-profile-link"[^>]*>CONNECT WALLET<\/button>/g,'');
+home=home.replace(/<a class="nav-settings-link"[^>]*>SETTINGS<\/a>/g,'');
+home=home.replace('<a href="#faq">FAQ</a></nav>','<a href="#faq">FAQ</a><button class="nav-profile-link" type="button" data-open-wallet aria-haspopup="dialog" aria-controls="wallet-dialog">CONNECT WALLET</button><a class="nav-settings-link" href="settings.html">SETTINGS</a></nav>');
+// Idempotent for repeat local builds; upstream home remains unchanged in Git.
+home=home.replace(/<dialog id="wallet-dialog"[\s\S]*?<\/dialog>/g,'').replace(/<script type="module" src="wallet-modal.js"[^>]*><\/script>/g,'').replace(/<style id="wallet-modal-style">[\s\S]*?<\/style>/g,'');
+home=home.replace("connect-src 'none'","connect-src 'self' https://*.walletconnect.com https://*.walletconnect.org https://*.reown.com wss://*.walletconnect.com wss://*.walletconnect.org");
+home=home.replace('</head>',`<style id="wallet-modal-style">${css}</style></head>`);
+home=home.replace('</body>',`<dialog id="wallet-dialog" class="ltl-wallet-dialog" aria-label="Connect wallet and edit profile"><div class="wallet-modal-head"><img src="assets/loadthelion-official-logo.webp" alt="LoadTheLion" class="wallet-modal-logo"><button type="button" data-close-wallet aria-label="Close wallet window">×</button></div><div data-profile-root></div><aside>Profile sign-in only. No transactions or token spending permissions. Your nickname, avatar and wallet address are public.</aside></dialog><script type="module" src="wallet-modal.js" integrity="sha256-${digest}"></script></body>`);
+home=home.replace(/<a class="nav-settings-link"[^>]*>SETTINGS<\/a>/g,'');
+home=home.replace('</nav>','<a class="nav-settings-link" href="settings.html">SETTINGS</a></nav>');
+home=home.replace(/<button class="hero-wallet-cta"[\s\S]*?<\/button>/g,'');
+home=home.replace(/<a class="hero-legend-link"[\s\S]*?<\/a>/g,'');
+home=home.replace('</h1><p class="v74-intro">','</h1><button class="hero-wallet-cta" data-open-wallet type="button" aria-haspopup="dialog" aria-controls="wallet-dialog">CONNECT WALLET <span aria-hidden="true">↗</span></button><p class="v74-intro">');
+home=home.replace('</button><p class="v74-intro">','</button><a class="hero-legend-link" href="#awakening" data-open-lore="true">INTO THE LEGEND <span aria-hidden="true">↗</span></a><p class="v74-intro">');
+const homeContent=await readFile('profile-service/public/home-content.html','utf8');
+home=home.replace(/<div class="v74-home-content">[\s\S]*?(?=<\/main>)/,homeContent+'\n');
+const dashboardContent=await readFile('profile-service/public/dashboard-content.html','utf8');
+home=home.replace(/<style id="dashboard-home-monitor">[\s\S]*?<\/style>/g,'');
+home=home.replace(/<section aria-label="\$LOAD Dashboard"[\s\S]*?<\/section>\s*/,dashboardContent.trimEnd()+'\n');
+// Monthly page shares the shell and scroll-progress behavior of existing pages.
+home=home.replace(/<a[^>]*href="#top-monthly-roar"[^>]*>TOP MONTHLY ROAR<\/a>/g,'');
+home=home.replace('<a href="#security">SECURITY</a>','<a href="#top-monthly-roar">TOP MONTHLY ROAR</a><a href="#security">SECURITY</a>');
+home=home.replace(/<section id="top-monthly-roar"[\s\S]*?<\/section>/g,'');
+home=home.replace('</body>','<section id="top-monthly-roar" class="load-fullpage" aria-label="Top Monthly Roar"><iframe loading="lazy" src="monthly.html" title="Top Monthly Roar"></iframe></section></body>');
+home=home.replace(/<style id="monthly-shell">[\s\S]*?<\/style>/g,'');
+home=home.replace('</head>',`<style id="monthly-shell">#top-monthly-roar{display:none!important;position:fixed!important;inset:var(--load-header-clearance,107px) 0 0!important;z-index:100000!important;background:#080a12;overflow:hidden!important;padding:0!important;margin:0!important;height:auto!important}#top-monthly-roar:target{display:block!important}#top-monthly-roar iframe{width:100%!important;height:100%!important;display:block;border:0;touch-action:pan-y}body:has(#top-monthly-roar:target)>header.header{z-index:100002;position:fixed;inset:0 0 auto}body:has(#top-monthly-roar:target){overflow:hidden!important}body:has(#top-monthly-roar:target) #v118-replay{display:none!important}@media(min-width:1000px){.nav{gap:.45rem!important}.nav a{font-size:.58rem!important}}</style></head>`);
+// Authorize exactly the scripts emitted by this build, without stale or duplicate hashes.
+const scriptHashes=[...home.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)]
+ .filter(([,attrs,text])=>!(/\bsrc\s*=/i.test(attrs))&&text.trim())
+ .map(([,attrs,text])=>createHash('sha256').update(text).digest('base64'));
+const scriptSources=[...new Set([...scriptHashes,digest])].map(hash=>`'sha256-${hash}'`).join(' ');
+home=home.replace(/script-src\s+[^;]+;/,`script-src ${scriptSources};`);
+await writeFile('site/home.html',home);
+let roar=await readFile('site/roar.html','utf8');
+roar=roar.replace('<p><a class="back" href="profile.html" target="_top">CONNECT WALLET · EDIT PROFILE</a></p>','');
+await writeFile('site/roar.html',roar);
+const roarScript=await readFile('site/roar.js','utf8');
+if(!roarScript.includes('async function hydrateProfiles()'))await writeFile('site/roar.js',roarScript+'\n'+await readFile('profile-service/leaderboard-profiles.mjs','utf8'));

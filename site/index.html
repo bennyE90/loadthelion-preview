@@ -1,4 +1,4 @@
-<!doctype html><html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>LoadTheLion</title><style>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>LoadTheLion</title><style>
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;background:#030308;color:white;font-family:system-ui,Arial,sans-serif;overflow:hidden}
 main{position:fixed;inset:0;background:#030308}video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#030308}
 #entry{position:absolute;inset:0;z-index:10;background:radial-gradient(ellipse at center,#1b1019 0%,#06060b 65%,#030308 100%);display:flex;align-items:center;justify-content:center}
@@ -11,7 +11,7 @@ main{position:fixed;inset:0;background:#030308}video{position:absolute;inset:0;w
 </style></head><body><main>
 <video id="movie" src="load-intro-v6-mobile.mp4" playsinline webkit-playsinline preload="auto"></video>
 <div id="entry"><button id="enter" type="button" style="display:block!important;visibility:visible!important;opacity:1!important;position:relative!important;z-index:100!important;background:linear-gradient(135deg,#a70c2c,#200811)!important;color:#fff!important;border:2px solid #f24a60!important;border-radius:3px!important;padding:23px 48px!important;font-family:Impact,'Arial Black',sans-serif!important;font-size:clamp(30px,8vw,52px)!important;letter-spacing:.13em!important;box-shadow:6px 6px 0 #090409,0 0 25px #d02045!important;transform:skewX(-7deg)!important" onclick="enterIntro()">ENTER IN</button></div>
-<div id="veil"></div><button id="fallback" class="btn" onclick="enterIntro()">▶ RIPROVA INTRO</button>
+<div id="veil"></div><button id="fallback" class="btn" onclick="enterIntro()">▶ RETRY INTRO</button>
 <div class="controls" id="controls"><button id="sound" class="btn" onclick="soundToggle()">♪ AUDIO ON</button><a class="btn skip" href="home.html?v=20261017-boost1">SKIP <span>→</span></a></div>
 </main><script>
 var movie=document.getElementById('movie'),entry=document.getElementById('entry'),fallback=document.getElementById('fallback'),sound=document.getElementById('sound'),controls=document.getElementById('controls'),leaving=false;
@@ -19,5 +19,5 @@ function goHome(){if(leaving)return;leaving=true;location.replace('home.html?v=2
 function enterIntro(){entry.style.display='none';fallback.style.display='none';controls.style.display='flex';movie.muted=false;movie.currentTime=0;syncSound();var p=movie.play();if(p&&p.catch)p.catch(function(){fallback.style.display='block'})}
 function syncSound(){sound.textContent=movie.muted?'◖)) ATTIVA AUDIO':'♪ AUDIO ON'}
 function soundToggle(){movie.muted=!movie.muted;syncSound()}
-movie.addEventListener('ended',goHome);movie.addEventListener('error',function(){fallback.style.display='block';fallback.textContent='▶ RIPROVA VIDEO'});
+movie.addEventListener('ended',goHome);movie.addEventListener('error',function(){fallback.style.display='block';fallback.textContent='▶ RETRY VIDEO'});
 </script></body></html>

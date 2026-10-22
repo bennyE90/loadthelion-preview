@@ -1,0 +1,36 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>LoadTheLion</title><style>
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;background:#030308;color:white;font-family:system-ui,Arial,sans-serif;overflow:hidden}
+main{position:fixed;inset:0;background:#030308}video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#030308}
+#entry{position:absolute;inset:0;z-index:10;background:radial-gradient(ellipse at center,#1b1019 0%,#06060b 65%,#030308 100%);display:flex;align-items:center;justify-content:center}
+#enter{font-family:Impact,'Arial Black',system-ui,sans-serif;font-weight:900;font-size:clamp(28px,7vw,54px);letter-spacing:.09em;color:#fff;background:linear-gradient(110deg,#ac2039,#5b1026);border:1px solid #fa5c70;border-radius:5px;padding:20px 39px;box-shadow:0 0 28px #d522443b,0 15px 50px #0009;cursor:pointer;transform:skewX(-4deg)}
+#enter:active{transform:skewX(-4deg) scale(.97)}
+.controls{position:absolute;z-index:3;left:16px;right:16px;bottom:calc(22px + env(safe-area-inset-bottom));display:none;align-items:center;justify-content:space-between;gap:14px}
+.btn{appearance:none;display:inline-flex;align-items:center;justify-content:center;min-height:43px;padding:11px 17px;border:1px solid #ffffff55;border-radius:99px;background:#070911a8;color:#fff;text-decoration:none;letter-spacing:.12em;font-size:11px;font-weight:750;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);cursor:pointer;box-shadow:0 4px 18px #0006}.skip{border-color:#d9476266;background:#170c17c9}.skip span{color:#ff637a;margin-left:9px}
+#veil{position:absolute;inset:0;z-index:8;pointer-events:none;background:#030308;opacity:0;transition:opacity .5s ease}
+#fallback{display:none;position:absolute;z-index:4;top:50%;left:50%;transform:translate(-50%,-50%);background:#ad1e3b;border-color:#ff657b;font-size:13px;padding:16px 23px}
+
+@font-face{font-family:'LOAD Street';src:url('assets/load-street.ttf') format('truetype');font-display:swap}
+#entry{background:radial-gradient(ellipse at center,#27102080,transparent 60%),#030308}
+#enter{appearance:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:40px;background:none;border:none;padding:30px;color:#f6eee5;box-shadow:none;transform:none;min-width:240px;cursor:pointer}
+#enter:active{transform:scale(.97)}#enter:focus-visible{outline:2px solid #edbd77;outline-offset:12px;border-radius:18px}
+.entry-mark{height:235px;width:235px;display:flex;align-items:center;justify-content:center;gap:20px;transform:skew(-17deg) rotate(-8deg);filter:drop-shadow(0 0 22px #e51f4544)}
+.entry-mark i{display:block;width:39px;height:190px;background:linear-gradient(155deg,#ff6c71,#ff213e 35%,#ae0e29);clip-path:polygon(48% 0,100% 18%,72% 100%,0 100%)}
+.entry-mark i:nth-child(2){height:230px}.entry-mark i:nth-child(3){height:200px}
+.entry-join{font:400 clamp(28px,7vw,42px)/1.2 'LOAD Street',Impact,sans-serif;letter-spacing:.15em;text-shadow:0 2px 12px #b8223b66}
+#enter:hover .entry-mark{filter:drop-shadow(0 0 30px #f22a5966)}
+@media(max-height:500px){#enter{gap:20px}.entry-mark{height:160px;transform:skew(-17deg) rotate(-8deg) scale(.7);margin:-25px 0}}
+
+#enter{gap:22px}.entry-mark.entry-official-a{display:block;width:clamp(220px,35vw,280px);height:auto;aspect-ratio:530/590;transform:none;filter:drop-shadow(0 0 18px #d0173333)}.entry-join{font-size:clamp(23px,5.5vw,29px);letter-spacing:.13em;text-shadow:none}#enter:hover .entry-mark{filter:drop-shadow(0 0 22px #e8234944)}@media(max-height:500px){.entry-mark.entry-official-a{width:160px;margin:0}#enter{gap:16px}}
+</style></head><body><main>
+<video id="movie" src="load-intro-v6-mobile.mp4" playsinline webkit-playsinline preload="auto"></video>
+<div id="entry"><button id="enter" type="button" aria-label="Join LoadTheLion — play intro" onclick="enterIntro()"><svg class="entry-mark entry-official-a" viewBox="740 0 530 590" aria-hidden="true" focusable="false"><defs><clipPath id="official-a-clip"><polygon points="1148,0 1156,32 1148,62 1165,48 1163,124 1188,242 1254,271 1244,307 1198,341 1230,462 1240,550 1165,490 1095,347 1012,478 947,548 967,501 875,550 891,508 776,557 812,481 935,279 1054,102"/></clipPath></defs><image href="assets/loadthelion-official-logo.webp" width="1774" height="887" clip-path="url(#official-a-clip)"/></svg><span class="entry-join">JOIN</span></button></div>
+<div id="veil"></div><button id="fallback" class="btn" onclick="enterIntro()">▶ RETRY INTRO</button>
+<div class="controls" id="controls"><button id="sound" class="btn" onclick="soundToggle()">♪ AUDIO ON</button><a class="btn skip" href="home.html?v=20261017-boost1">SKIP <span>→</span></a></div>
+</main><script>
+var movie=document.getElementById('movie'),entry=document.getElementById('entry'),fallback=document.getElementById('fallback'),sound=document.getElementById('sound'),controls=document.getElementById('controls'),leaving=false;
+function goHome(){if(leaving)return;leaving=true;location.replace('home.html?v=20261017-boost1')}
+function enterIntro(){entry.style.display='none';fallback.style.display='none';controls.style.display='flex';movie.muted=false;movie.currentTime=0;syncSound();var p=movie.play();if(p&&p.catch)p.catch(function(){fallback.style.display='block'})}
+function syncSound(){sound.textContent=movie.muted?'◖)) ATTIVA AUDIO':'♪ AUDIO ON'}
+function soundToggle(){movie.muted=!movie.muted;syncSound()}
+movie.addEventListener('ended',goHome);movie.addEventListener('error',function(){fallback.style.display='block';fallback.textContent='▶ RETRY VIDEO'});
+</script></body></html>
